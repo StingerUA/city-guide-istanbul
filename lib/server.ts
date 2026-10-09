@@ -1,20 +1,19 @@
 import {env} from 'cloudflare:workers';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
-import {demoVenues,type Venue,type Profile,type AppState,type Surface,type Feedback,type Review} from './model';
+import {accountRole} from './access-policy';
+import {demoVenues,isCategoryEnabled,type Venue,type Profile,type AppState,type Surface,type Feedback,type Review} from './model';
 
 export class AppError extends Error { constructor(public code:string,public status=400){super(code)} }
 export function db(){if(!env.DB)throw new AppError('storage_unavailable',503);return env.DB}
 export async function actor(){const u=await getChatGPTUser();if(!u)throw new AppError('signin_required',401);return u}
 export async function profile():Promise<Profile>{
  const user=await actor(),sql=db();
- // Bootstrap is permitted only while Sites keeps this pilot owner-private.
- await sql.prepare("INSERT OR IGNORE INTO cg_meta (key,value) VALUES ('owner',?)").bind(user.userId).run();
- const owner=await sql.prepare("SELECT value FROM cg_meta WHERE key='owner'").first<{value:string}>();
- const initial:Profile={id:user.userId,name:user.fullName||'City Guide',email:user.email,phone:'',language:'ru',homeAddress:'',role:owner?.value===user.userId?'admin':'tourist'};
+ const initial:Profile={id:user.userId,name:user.fullName||'City Guide',email:user.email,phone:'',language:'ru',homeAddress:'',role:accountRole(user.email,'tourist')};
  await sql.prepare('INSERT OR IGNORE INTO cg_users (id,email,payload,created_at) VALUES (?,?,?,?)').bind(user.userId,user.email,JSON.stringify(initial),new Date().toISOString()).run();
  const row=await sql.prepare('SELECT payload FROM cg_users WHERE id=?').bind(user.userId).first<{payload:string}>();
  const saved:Profile=JSON.parse(row?.payload||JSON.stringify(initial));
- return {...saved,id:user.userId,email:user.email,role:owner?.value===user.userId?'admin':saved.role==='partner'?'partner':'tourist'};
+ await sql.prepare('UPDATE cg_users SET email=? WHERE id=? AND email<>?').bind(user.email,user.userId,user.email).run();
+ return {...saved,id:user.userId,email:user.email,role:accountRole(user.email,saved.role)};
 }
 export async function seed(){const sql=db();if(await sql.prepare("SELECT value FROM cg_meta WHERE key='seed_v1'").first())return;await sql.batch([...demoVenues.map(v=>sql.prepare('INSERT OR IGNORE INTO cg_venues (id,owner_id,status,city,category,is_demo,version,payload,updated_at) VALUES (?,?,?,?,?,?,?,?,?)').bind(v.id,v.ownerId,v.status,v.city,v.category,1,1,JSON.stringify(v),v.updatedAt)),sql.prepare("INSERT OR IGNORE INTO cg_meta (key,value) VALUES ('seed_v1','done')")])}
 export async function venue(id:string){const row=await db().prepare('SELECT payload,version FROM cg_venues WHERE id=?').bind(id).first<{payload:string;version:number}>();if(!row)throw new AppError('not_found',404);return {...JSON.parse(row.payload),version:row.version} as Venue}
@@ -70,7 +69,7 @@ export async function state(surface?:Surface):Promise<AppState>{
   return privateAccess?review:{...review,userId:'',bookingId:''};
  });
  const feedback:Feedback[]=tickets.results.map(x=>{const p=JSON.parse(x.payload);return {...p,id:x.id,userId:x.user_id,author:JSON.parse(x.author_payload).name,kind:x.kind,status:x.status,version:x.version,createdAt:x.created_at,updatedAt:p.updatedAt||x.created_at,reply:p.reply||''}});
- return {user:u,venues:v.results.map(x=>({...JSON.parse(x.payload),version:x.version})),bookings:b.results.map(x=>JSON.parse(x.payload)),favorites:f.results.map(x=>x.venue_id),reviews,feedback,...(people?{users:people.results.map(x=>({...JSON.parse(x.payload),id:x.id,email:x.email,role:x.id===u.id?'admin':JSON.parse(x.payload).role==='partner'?'partner':'tourist'}))}:{}),mode:'live',revision:new Date().toISOString()};
+ return {user:u,venues:v.results.map(x=>({...JSON.parse(x.payload),version:x.version})).filter(v=>isCategoryEnabled(v.category)),bookings:b.results.map(x=>JSON.parse(x.payload)),favorites:f.results.map(x=>x.venue_id),reviews,feedback,...(people?{users:people.results.map(x=>({...JSON.parse(x.payload),id:x.id,email:x.email,role:accountRole(x.email,JSON.parse(x.payload).role)}))}:{}),mode:'live',revision:new Date().toISOString()};
 }
 export function handleError(e:unknown){console.error(e instanceof AppError?e.code:e);return Response.json({error:e instanceof AppError?e.code:'storage_unavailable'},{status:e instanceof AppError?e.status:503})}
 export function sameOrigin(req:Request){const origin=req.headers.get('origin');if(origin&&origin!==new URL(req.url).origin)throw new AppError('forbidden',403)}

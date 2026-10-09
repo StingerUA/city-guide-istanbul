@@ -3,6 +3,14 @@ export type Localized=Record<Lang,string>;
 export const locale={ru:'ru-RU',tr:'tr-TR',en:'en-GB'};
 export const categories=['restaurant','shopping','fun','nightlife','rent','beauty','history','nature','museum','pray','clinic','emergency','hotel'] as const;
 export type Category=typeof categories[number];
+// Retain historical hotel records, but hide the category until it is enabled.
+export const visibleCategories=categories.filter(category=>category!=='hotel');
+export function isCategoryEnabled(category:string){return visibleCategories.some(value=>value===category)}
+export const categoryImages:Partial<Record<Category,string>>={
+ nightlife:'/images/category-nightlife.webp',
+ history:'/images/category-history.webp',
+ nature:'/images/category-nature.webp',
+};
 export type Service={id:string;name:Localized;price:number;duration:number;image:string};
 export type Venue={id:string;name:string;category:Category;subcategory:string;city:string;district:string;address:string;lat:number;lng:number;description:Localized;image:string;gallery:string[];phone:string;website:string;open:string;close:string;price:number;currency:'TRY'|'USD'|'EUR';bookingType:'table'|'rental'|'appointment'|'ticket'|'stay'|'none';capacity:number;alcohol:boolean;status:'draft'|'pending'|'published'|'archived';isDemo:boolean;ownerId:string;updatedAt:string;version:number;discount:number;services:Service[]};
 export type Surface='admin'|'partner'|'tourist';

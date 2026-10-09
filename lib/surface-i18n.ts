@@ -1,4 +1,9 @@
 export const surfaceWords:Record<string,[string,string,string]>={
+ navHome:['Главная','Ana sayfa','Home'],
+ navFavorites:['Избранное','Favoriler','Saved'],
+ navBookings:['Заявки','İstekler','Bookings'],
+ navProfile:['Профиль','Profil','Profile'],
+ navDiscover:['Город','Keşfet','Explore'],
  perNight:['за ночь','gecelik','per night'],
  perAppointment:['за запись','randevu başına','per appointment'],
  perReservation:['за бронирование','rezervasyon başına','per booking'],

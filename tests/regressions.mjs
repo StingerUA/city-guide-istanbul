@@ -103,7 +103,7 @@ try{
  await legacy.db.prepare('INSERT INTO cg_feedback(id,user_id,kind,payload,created_at) VALUES (?,?,?,?,?)').bind(fid,'legacy-business','help',JSON.stringify({kind:'help',rating:0,text:'Question before update'}),now).run();
  await legacy.migrate('0001_odd_layla_miller.sql');
  const state=await legacy.request('/api/state?surface=admin','legacy-owner');
- await check('schema upgrade preserves existing owner, business roles and listings',()=>expect(state.status===200&&state.user.role==='admin'&&state.users.find(u=>u.id==='legacy-business').role==='partner'&&state.venues.length===1&&state.venues[0].version===7));
+ await check('schema upgrade preserves an allowlisted owner, business roles and listings',()=>expect(state.status===200&&state.user.role==='admin'&&state.users.find(u=>u.id==='legacy-business').role==='partner'&&state.venues.length===1&&state.venues[0].version===7));
  await check('schema upgrade preserves old review text with safe moderation defaults',()=>expect(state.reviews[0].text==='Review before update'&&state.reviews[0].status==='published'&&state.reviews[0].version===1));
  await check('schema upgrade preserves old support requests with safe triage defaults',()=>expect(state.feedback[0].text==='Question before update'&&state.feedback[0].status==='open'&&state.feedback[0].version===1));
  await check('upgraded old review can be moderated and old support request answered',async()=>expect((await legacy.action('moderateReview',{id:rid,version:1,status:'hidden'},'legacy-owner')).status===200&&(await legacy.action('feedbackStatus',{id:fid,version:1,status:'resolved',reply:'Migration retained this request'},'legacy-owner')).status===200));

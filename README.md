@@ -1,20 +1,20 @@
 # City Guide · İstanbul
 
-Invitation-only v0.2.1 pilot for onboarding businesses in Istanbul. The administrator, business and traveler areas are available in Russian, Turkish and English. Listings, uploaded photos, favorites, test bookings, reviews and support requests are stored in D1/R2.
+Source release v0.2.2 for City Guide in Istanbul. The administrator, business and traveler areas are available in Russian, Turkish and English. Listings, uploaded photos, favorites, test bookings, reviews and support requests are stored in D1/R2.
 
 ## App areas
 
 | Address | Features | Access |
 | --- | --- | --- |
-| `/admin` | Listing approvals and editing, booking management, user roles, review moderation, support replies, offers and roadmap | Project owner |
-| `/partner` | Business workspace, listings, booking confirmations and completion, replies to reviews | Owner and accounts assigned the business role |
+| `/admin` | Listing approvals and editing, booking management, user roles, review moderation, support replies, offers and roadmap | The two server-allowlisted administrator emails |
+| `/partner` | Business workspace, listings, booking confirmations and completion, replies to reviews | Administrators and accounts assigned the business role |
 | `/tourist` | Mobile City Guide home, categories, search, selected-place map, reference currency conversion, forecast, offers, favorites, personal bookings, reviews, profile and support | Signed-in accounts allowed by the private Site |
 
-The root redirects to the user's role. The owner can open the traveler interface without changing their role. New users default to traveler. Role changes, data scope and listing ownership are enforced by the server. Client profile fields cannot grant permissions.
+The root always redirects to `/tourist`. Management areas have separate URLs, with no workspace switcher in the header. Server policy grants administrator access only to `nncdecdgc@gmail.com` and `sayitatas@hotmail.com`, using the authenticated email. Other new users default to traveler; first-login ownership and stored `admin` roles do not grant administrator privileges. Role changes, data scope and listing ownership are enforced by the server. Client profile fields cannot grant permissions.
 
 ## Verification
 
-See [docs/VALIDATION.md](docs/VALIDATION.md). After building, run `node tests/smoke.mjs` and `node tests/regressions.mjs` for compiled Worker checks against isolated in-memory D1/R2. The suites pass 110 assertions, including upgrades of existing data. Test identities and bookings are never production seeds.
+See [docs/VALIDATION.md](docs/VALIDATION.md). After building, run `node tests/smoke.mjs` and `node tests/regressions.mjs` for compiled Worker checks against isolated in-memory D1/R2. Run `node tests/access-policy.mjs` for the two-administrator policy, client-first routing and hidden hotels. The three suites pass 137 assertions, including upgrades of existing data. Test identities and bookings are never production seeds.
 
 Full scope and milestones: [docs/City_Guide_Plan_RU.md](docs/City_Guide_Plan_RU.md).
 
@@ -31,9 +31,9 @@ React / TypeScript / Vinext on Cloudflare Workers. D1 SQLite and R2 storage bind
 
 ## Current boundaries
 
-This release uses a custom invitation-only audience. The original owner binding was verified before an external viewer was invited; the viewer receives no administrator or business privileges. Site viewing access and application roles are separate: newly admitted users enter the traveler area and can use its test flows. A dedicated application-level investor role remains future work.
+This GitHub source release has not been deployed to the former Sites application. Its current authentication adapter still requires the trusted Sites gateway. Standalone Cloudflare/Supabase authentication and persistence are the next migration stage; see [the migration guide](docs/CLOUDFLARE_SUPABASE_RU.md). The second allowlisted email is an application administrator in this code; old Site viewing permissions are separate.
 
-On a new deployment, initialize and verify the owner binding while access is owner-only, before inviting anyone. Preserve that binding when updating or restoring the database.
+Hotels are temporarily excluded from category selectors and venue state. New hotel listings, favorites and bookings are disabled; existing database records are preserved.
 
 Every booking is explicitly a test booking. Payment controls collect no card numbers and transfer no money. No email/SMS is sent. Administrator support replies are stored and visible in the sender's support history; refresh that section to load updates.
 
@@ -43,7 +43,7 @@ Capacity checks are atomic for equal-time generic requests and overlapping renta
 
 ## GitHub and deployment portability
 
-The repository contains application source, demo assets, migrations and project documentation. Do not commit credentials, runtime database content, uploaded private media, `.wrangler`, `node_modules` or deployment archives. A private GitHub repository can store this code; the existing app remains served by Sites.
+The repository contains application source, demo assets, migrations and project documentation. Do not commit credentials, runtime database content, uploaded private media, `.wrangler`, `node_modules` or deployment archives. GitHub is the source of truth for further development. The Cloudflare Workers + Supabase migration is documented in [docs/CLOUDFLARE_SUPABASE_RU.md](docs/CLOUDFLARE_SUPABASE_RU.md).
 
 The current authentication integration relies on trusted identity headers set by the private Sites gateway. It must not be exposed as an unprotected standalone Worker that trusts arbitrary client headers. Moving hosting requires replacing authentication or an equivalent authenticated gateway, provisioning D1/R2, applying migrations and reviewing access. GitHub Pages alone serves static files and cannot run this application's Worker and database.
 

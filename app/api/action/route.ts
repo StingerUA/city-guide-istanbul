@@ -1,7 +1,8 @@
 import {z} from 'zod';
 import {AppError,profile,db,venue,canEdit,checkVenueMedia,boundedBody,seed,state,handleError,sameOrigin} from '@/lib/server';
 import {venueInput,bookingInput} from '@/lib/validation';
-import {istanbulDate,type Venue,type Booking,type Review} from '@/lib/model';
+import {isAdminEmail} from '@/lib/access-policy';
+import {istanbulDate,isCategoryEnabled,type Venue,type Booking,type Review} from '@/lib/model';
 export const dynamic='force-dynamic';
 function sameBooking(b:Booking,p:z.infer<typeof bookingInput>){
  const keys=['venueId','name','phone','date','time','guests','payment','note'] as const;
@@ -13,21 +14,21 @@ export async function POST(req:Request){try{
  if(input.surface==='admin'&&u.role!=='admin'||input.surface==='partner'&&u.role==='tourist')throw new AppError('forbidden',403);
  if(input.action==='saveVenue'){
   if(u.role==='tourist')throw new AppError('forbidden',403);
-  const p=venueInput.parse(input.data);const old=p.id?await venue(p.id):null;if(old&&!canEdit(u,old))throw new AppError('forbidden',403);await checkVenueMedia(u,p);
+  const p=venueInput.parse(input.data);if(!isCategoryEnabled(p.category))throw new AppError('unavailable');const old=p.id?await venue(p.id):null;if(old&&!canEdit(u,old))throw new AppError('forbidden',403);await checkVenueMedia(u,p);
   const status=u.role==='admin'?p.status:p.status==='published'?'pending':p.status;
   const v:Venue={...p,id:old?.id||crypto.randomUUID(),ownerId:old?.ownerId||u.id,isDemo:old?.isDemo||false,version:(old?.version||0)+1,status,updatedAt:now};
   if(old){if(p.version!==old.version)throw new AppError('conflict',409);const r=await sql.prepare('UPDATE cg_venues SET status=?,city=?,category=?,version=?,payload=?,updated_at=? WHERE id=? AND version=?').bind(v.status,v.city,v.category,v.version,JSON.stringify(v),now,v.id,old.version).run();if(!r.meta.changes)throw new AppError('conflict',409)}
   else await sql.prepare('INSERT INTO cg_venues (id,owner_id,status,city,category,is_demo,version,payload,updated_at) VALUES (?,?,?,?,?,?,?,?,?)').bind(v.id,v.ownerId,v.status,v.city,v.category,0,1,JSON.stringify(v),now).run();result={id:v.id};
  }else if(input.action==='favorite'){
   const p=z.object({id:z.string().max(100),value:z.boolean()}).parse(input.data);
-  if(p.value){const v=await venue(p.id);if(v.status!=='published'&&!canEdit(u,v))throw new AppError('forbidden',403);await sql.prepare('INSERT OR IGNORE INTO cg_favorites (user_id,venue_id) VALUES (?,?)').bind(u.id,p.id).run()}
+  if(p.value){const v=await venue(p.id);if(!isCategoryEnabled(v.category))throw new AppError('unavailable');if(v.status!=='published'&&!canEdit(u,v))throw new AppError('forbidden',403);await sql.prepare('INSERT OR IGNORE INTO cg_favorites (user_id,venue_id) VALUES (?,?)').bind(u.id,p.id).run()}
   else await sql.prepare('DELETE FROM cg_favorites WHERE user_id=? AND venue_id=?').bind(u.id,p.id).run();
  }else if(input.action==='book'){
   const p=bookingInput.parse(input.data);
   const previous=()=>sql.prepare('SELECT user_id,payload FROM cg_bookings WHERE id=?').bind(p.id).first<{user_id:string;payload:string}>();
   const retry=async(row:{user_id:string;payload:string})=>{if(row.user_id!==u.id)throw new AppError('forbidden',403);if(!sameBooking(JSON.parse(row.payload),p))throw new AppError('idempotency_conflict',409);return Response.json({state:await state(input.surface),result:{id:p.id}},{headers:{'Cache-Control':'no-store'}})};
   const existing=await previous();if(existing)return await retry(existing);
-  const v=await venue(p.venueId);if(v.status!=='published'||v.bookingType==='none')throw new AppError('unavailable');
+  const v=await venue(p.venueId);if(!isCategoryEnabled(v.category)||v.status!=='published'||v.bookingType==='none')throw new AppError('unavailable');
   const start=new Date(p.date+'T00:00:00Z');if(isNaN(start.getTime())||start.toISOString().slice(0,10)!==p.date||p.date<istanbulDate()||start.getTime()>Date.now()+366*86400000)throw new AppError('invalid_date');
   const period=v.bookingType==='rental'||v.bookingType==='stay';const end=period?p.endDate:p.date;
   if(period&&(!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<=p.date||new Date(end+'T00:00:00Z').toISOString().slice(0,10)!==end))throw new AppError('invalid_date');
@@ -60,7 +61,8 @@ export async function POST(req:Request){try{
   if(u.role!=='admin')throw new AppError('forbidden',403);
   const p=z.object({id:z.string().max(100),role:z.enum(['partner','tourist']),expectedRole:z.enum(['partner','tourist'])}).parse(input.data);
   if(p.id===u.id)throw new AppError('owner_locked',409);
-  const row=await sql.prepare('SELECT payload FROM cg_users WHERE id=?').bind(p.id).first<{payload:string}>();if(!row)throw new AppError('not_found',404);
+  const row=await sql.prepare('SELECT email,payload FROM cg_users WHERE id=?').bind(p.id).first<{email:string;payload:string}>();if(!row)throw new AppError('not_found',404);
+  if(isAdminEmail(row.email))throw new AppError('owner_locked',409);
   const saved=JSON.parse(row.payload);const role=saved.role==='partner'?'partner':'tourist';if(role!==p.expectedRole)throw new AppError('conflict',409);
   const r=await sql.prepare('UPDATE cg_users SET payload=? WHERE id=? AND payload=?').bind(JSON.stringify({...saved,role:p.role}),p.id,row.payload).run();if(!r.meta.changes)throw new AppError('conflict',409);
  }else if(input.action==='moderateReview'||input.action==='reviewReply'){

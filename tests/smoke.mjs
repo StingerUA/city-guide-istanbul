@@ -12,7 +12,7 @@ const modules=['index.js',...files.filter(f=>/\.(m?js)$/.test(f)&&f!=='index.js'
 const mf=new Miniflare({modules,modulesRoot:root,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'city-guide-test'},r2Buckets:{BUCKET:'city-guide-test'}});
 let checks=0;
 function check(value,message){assert.ok(value,message);checks++;console.log('PASS '+message)}
-const headers=who=>who?{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.test'}:{};
+const headers=who=>who?{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who==='qa-owner'?'nncdecdgc@gmail.com':who+'@example.test'}:{};
 async function request(url,who='qa-owner',body){const r=await mf.dispatchFetch('http://local.test'+url,{method:body?'POST':'GET',headers:{...headers(who),...(body?{'Content-Type':'application/json','Origin':'http://local.test'}:{})},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();return {status:r.status,...d}}
 const action=(action,data,who='qa-owner',surface)=>request('/api/action',who,{action,data,...(surface?{surface}:{})});
 try{
@@ -20,7 +20,7 @@ try{
  for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())for(const stmt of (await readFile('drizzle/'+file,'utf8')).split('--> statement-breakpoint'))if(stmt.trim())await database.prepare(stmt).run();
  check((await request('/api/state',null)).status===401,'anonymous data access is rejected');
  const first=await request('/api/state?surface=admin');
- check(first.status===200&&first.user.role==='admin'&&first.venues.length===9,'private owner initializes nine demo places');
+ check(first.status===200&&first.user.role==='admin'&&first.venues.length===9,'allowlisted administrator initializes nine demo places');
  const newcomer=await request('/api/state','qa-partner');check(newcomer.user.role==='tourist','new accounts default to the tourist role');
  check((await request('/api/state?surface=admin','qa-partner')).status===403&&(await request('/api/state?surface=partner','qa-partner')).status===403,'tourists cannot read either management area');
  check((await action('userRole',{id:'qa-partner',role:'partner',expectedRole:'tourist'},'qa-owner','admin')).status===200,'administrator can assign a business role');
@@ -107,7 +107,7 @@ try{
   const html=await mf.dispatchFetch('http://local.test/'+area,{headers:headers(who)});const body=await html.text();
   check(html.status===200&&body.includes('City Guide')&&!body.includes('Internal Server Error'),'server renders the '+area+' area');
  }
- const rootResponse=await mf.dispatchFetch('http://local.test/',{headers:headers('qa-owner'),redirect:'manual'});check([302,303,307,308].includes(rootResponse.status)&&rootResponse.headers.get('location')==='/admin','root sends the owner to the administrator area');
+ const rootResponse=await mf.dispatchFetch('http://local.test/',{headers:headers('qa-owner'),redirect:'manual'});check([302,303,307,308].includes(rootResponse.status)&&rootResponse.headers.get('location')==='/tourist','root sends administrators to the client home');
  const blocked=await mf.dispatchFetch('http://local.test/admin',{headers:headers('qa-tourist'),redirect:'manual'});check([302,303,307,308].includes(blocked.status)&&blocked.headers.get('location')==='/tourist','protected administrator page redirects a tourist');
  const anon=await mf.dispatchFetch('http://local.test/tourist',{redirect:'manual'});check([302,303,307,308].includes(anon.status)&&anon.headers.get('location').startsWith('/signin-with-chatgpt'),'tourist page requires a signed-in user');
  console.log(JSON.stringify({passed:checks,scope:'compiled Worker + in-memory D1/R2',browserQA:false}));

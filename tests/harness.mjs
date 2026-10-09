@@ -9,7 +9,7 @@ export async function harness({migrations=true,outboundService}={}){
  const modules=['index.js',...files.filter(f=>/\.(m?js)$/.test(f)&&f!=='index.js')].map(f=>({type:'ESModule',path:path.join(root,f)}));
  const mf=new Miniflare({modules,modulesRoot:root,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'city-guide-regression'},r2Buckets:{BUCKET:'city-guide-regression'},...(outboundService?{outboundService}:{})});
  const db=await mf.getD1Database('DB');
- const headers=who=>who?{'oai-authenticated-user-id':who,'oai-authenticated-user-email':who+'@example.test'}:{};
+ const headers=who=>who?{'oai-authenticated-user-id':who,'oai-authenticated-user-email':['owner','legacy-owner'].includes(who)?'nncdecdgc@gmail.com':who==='coadmin'?'Sayitatas@Hotmail.com':who+'@example.test'}:{};
  async function migrate(file){for(const stmt of (await readFile('drizzle/'+file,'utf8')).split('--> statement-breakpoint'))if(stmt.trim())await db.prepare(stmt).run()}
  if(migrations)for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())await migrate(file);
  async function request(url,who='owner',body,extra={}){

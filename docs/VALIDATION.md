@@ -36,3 +36,7 @@ All migrations apply successfully to isolated databases. Tests do not seed produ
 The live owner binding was verified before sharing. The current custom audience contains the owner and one external viewer. The application still defaults new users to traveler; a Site viewer grant does not grant administrator or business permissions.
 
 Browser/mobile visual QA and supported-context WebMCP validation remain unavailable in this environment. The managed Sites preview workflow requires the unavailable `control-browser` skill and explicitly forbids improvising another browser-control path. Server rendering, type checking and API checks do not establish layout correctness on real phones. Weather and currency feed availability are not guaranteed by the integration suite; they require successful external requests at runtime. Real provider onboarding, notification delivery and payment processing are outside this test release.
+
+## v0.2.2 GitHub update — 10 October 2026
+
+TypeScript and the portable production build passed. The isolated Worker suites passed 137 checks: 64 smoke, 46 regression/migration and 27 access-policy/routing/category checks. Both administrator emails, rejection of first-visitor and stored-role escalation, protected administrator roles, client-first routing, hidden hotel data and actions, and category image files were checked. Server rendering was checked for all three areas. Mobile browser layout inspection and live Supabase/Cloudflare deployment are not included in this validation.
