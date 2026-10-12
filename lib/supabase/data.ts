@@ -41,6 +41,8 @@ export async function dataRequest<T=unknown>(
     let error:{code?:string;message?:string}={};
     try{error=await r.json() as typeof error}catch{}
     if(error.code==='23505')throw new DataError(409,'conflict');
+    if(['fully_booked','idempotency_conflict','conflict','unavailable','invalid_date'].includes(error.message||''))
+      throw new DataError(['invalid_date','unavailable'].includes(error.message||'')?400:409,error.message!);
     throw new DataError(r.status===409?409:r.status===401?503:502,
       r.status===409?'conflict':'storage_unavailable');
   }
