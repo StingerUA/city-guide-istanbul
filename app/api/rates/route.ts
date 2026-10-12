@@ -1,4 +1,6 @@
-import {actor,db,AppError,handleError} from '@/lib/server';
+import {actor,AppError,handleError} from '@/lib/server';
+
+import {list,dataRequest} from '@/lib/supabase/data';
 
 const currencies=['TRY','USD','EUR','RUB','GBP','SAR','IQD'];
 type Rates={rates:Record<string,number>;updated:string;fetchedAt:number};
@@ -17,14 +19,17 @@ async function latest():Promise<Rates>{
 }
 export async function GET(){
  try{
-  await actor();const sql=db();
-  const cache=await sql.prepare("SELECT value FROM cg_meta WHERE key='exchange_rates'").first<{value:string}>();
+  await actor();
+  const stored=await list<{value:string}>('cg_meta',{key:'eq.exchange_rates'},'value');
+  const cache=stored[0];
   if(cache){
    let value:Rates|undefined;try{value=JSON.parse(cache.value)}catch{/* Refresh an invalid cache. */}
    if(value&&valid(value)&&Number.isFinite(value.fetchedAt)&&Date.now()>=value.fetchedAt&&Date.now()-value.fetchedAt<6*3600000)return Response.json(value,{headers:{'Cache-Control':'no-store'}});
   }
   const value=await latest();
-  await sql.prepare("INSERT INTO cg_meta (key,value) VALUES ('exchange_rates',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(value)).run();
+  await dataRequest('/rest/v1/cg_meta','POST',{on_conflict:'key'},
+    [{key:'exchange_rates',value:JSON.stringify(value)}],
+    'resolution=merge-duplicates,return=minimal');
   return Response.json(value,{headers:{'Cache-Control':'no-store'}});
  }catch(e){return handleError(e)}
 }
