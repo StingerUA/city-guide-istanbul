@@ -11,7 +11,7 @@ export class DataError extends Error {
 }
 function credentials() {
   const cfg=supabaseConfig();
-  const key=env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SECRET_KEY;
+  const key=(env as unknown as Record<string,string|undefined>).SUPABASE_SECRET_KEY||process.env.SUPABASE_SECRET_KEY;
   if(!cfg||!key||!key.startsWith('sb_secret_'))throw new DataError(503,'storage_unavailable');
   return {url:cfg.url,key};
 }
@@ -70,7 +70,7 @@ export async function storageRequest(path:string,method='GET',body?:Uint8Array,c
   try{
     const r=await fetch(url+'/storage/v1/object/'+path,{
       method,headers:{apikey:key,...(contentType?{'Content-Type':contentType}:{})},
-      ...(body?{body}:{}),cache:'no-store',signal:AbortSignal.timeout(15000)
+      ...(body?{body:new Uint8Array(body).buffer}:{}),cache:'no-store',signal:AbortSignal.timeout(15000)
     });
     if(!r.ok)throw new DataError(r.status===404?404:502,
       r.status===404?'not_found':'storage_unavailable');
