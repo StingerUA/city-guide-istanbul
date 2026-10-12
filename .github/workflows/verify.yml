@@ -1,0 +1,36 @@
+name: Verify City Guide
+on:
+  pull_request:
+  push:
+    branches: [main, feat/cloudflare-supabase-runtime-20261012]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.25.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm run build
+
+      - name: Smoke-test standalone Worker sign-in route
+        shell: bash
+        run: |
+          pnpm exec wrangler dev --config dist/server/wrangler.json --local --ip 127.0.0.1 --port 8787 --inspector-port 0 > /tmp/city-guide-worker.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for n in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8787/signin -o /tmp/city-guide-signin.html; then
+              grep -q 'City Guide' /tmp/city-guide-signin.html
+              exit $?
+            fi
+            sleep 2
+          done
+          cat /tmp/city-guide-worker.log
+          exit 1
