@@ -1,11 +1,11 @@
 import {env} from 'cloudflare:workers';
-import {getChatGPTUser} from '@/app/chatgpt-auth';
+import {getSupabaseUser} from '@/lib/supabase/auth';
 import {accountRole} from './access-policy';
 import {demoVenues,isCategoryEnabled,type Venue,type Profile,type AppState,type Surface,type Feedback,type Review} from './model';
 
 export class AppError extends Error { constructor(public code:string,public status=400){super(code)} }
 export function db(){if(!env.DB)throw new AppError('storage_unavailable',503);return env.DB}
-export async function actor(){const u=await getChatGPTUser();if(!u)throw new AppError('signin_required',401);return u}
+export async function actor(){const u=await getSupabaseUser();if(!u)throw new AppError('signin_required',401);return u}
 export async function profile():Promise<Profile>{
  const user=await actor(),sql=db();
  const initial:Profile={id:user.userId,name:user.fullName||'City Guide',email:user.email,phone:'',language:'ru',homeAddress:'',role:accountRole(user.email,'tourist')};
