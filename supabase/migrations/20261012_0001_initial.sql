@@ -174,16 +174,28 @@ for select to authenticated using (
 create policy "favorites_self" on public.cg_favorites
 for select to authenticated using (user_id = (select auth.uid()));
 
-create policy "reviews_public_own_or_owner" on public.cg_reviews
+-- Review payload contains private booking IDs. Do NOT allow general public
+-- SELECT on this table. Public reviews are exposed only as sanitized JSON.
+create policy "reviews_private_owners" on public.cg_reviews
 for select to authenticated using (
   user_id = (select auth.uid()) or (select public.cg_is_admin())
   or exists (
-    select 1 from public.cg_venues v where v.id = venue_id and (
-      (v.status = 'published' and status = 'published')
-      or (v.owner_id = (select auth.uid())::text and (select public.cg_is_partner()))
-    )
+    select 1 from public.cg_venues v where v.id = venue_id
+      and v.owner_id = (select auth.uid())::text and (select public.cg_is_partner())
   )
 );
+
+create or replace function public.cg_public_reviews()
+returns table (review jsonb)
+language sql stable security definer set search_path = ''
+as $$
+  select (r.payload - 'userId' - 'bookingId')
+    || jsonb_build_object('status',r.status,'version',r.version)
+  from public.cg_reviews r
+  join public.cg_venues v on v.id = r.venue_id
+  where r.status = 'published' and v.status = 'published'
+  order by r.created_at desc limit 1000;
+$$;
 
 create policy "feedback_self_or_admin" on public.cg_feedback
 for select to authenticated using (user_id = (select auth.uid()) or (select public.cg_is_admin()));
@@ -202,8 +214,10 @@ grant select on public.cg_users, public.cg_venues, public.cg_bookings,
 
 revoke all on function public.cg_is_admin() from public, anon;
 revoke all on function public.cg_is_partner() from public, anon;
+revoke all on function public.cg_public_reviews() from public, anon;
 grant execute on function public.cg_is_admin() to authenticated;
 grant execute on function public.cg_is_partner() to authenticated;
+grant execute on function public.cg_public_reviews() to authenticated;
 
 -- Private media bucket; actual read/write paths are implemented later.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
