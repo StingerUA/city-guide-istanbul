@@ -1,3 +1,7 @@
+> **Где приложение?** Адрес GitHub Pages `stingerua.github.io/city-guide-istanbul/` отображает README, потому что Next.js API нельзя запустить на GitHub Pages. Для самого приложения нужен Cloudflare Worker. [Инструкция запуска](docs/DEPLOY_CITY_GUIDE_RU.md).
+
+> **Backend:** Cloudflare Workers + Supabase Auth/PostgreSQL/Storage. Первая публикация Worker требует Cloudflare API Token и настройки секретов в панели Cloudflare. Код и сборка подготовлены отдельно от публичного развёртывания.
+
 # City Guide · İstanbul
 
 Source release v0.2.2 for City Guide in Istanbul. The administrator, business and traveler areas are available in Russian, Turkish and English. Listings, uploaded photos, favorites, test bookings, reviews and support requests are stored in D1/R2.
