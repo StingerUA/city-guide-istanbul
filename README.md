@@ -4,7 +4,7 @@
 
 # City Guide · İstanbul
 
-Source release v0.2.2 for City Guide in Istanbul. The administrator, business and traveler areas are available in Russian, Turkish and English. Listings, uploaded photos, favorites, test bookings, reviews and support requests are stored in D1/R2.
+Source release v0.2.2 for City Guide in Istanbul. The administrator, business and traveler areas are available in Russian, Turkish and English. In the Cloudflare Workers deployment, listings, uploaded photos, favorites, bookings, reviews and support requests are stored in Supabase PostgreSQL and private Storage.
 
 ## App areas
 
@@ -12,13 +12,13 @@ Source release v0.2.2 for City Guide in Istanbul. The administrator, business an
 | --- | --- | --- |
 | `/admin` | Listing approvals and editing, booking management, user roles, review moderation, support replies, offers and roadmap | The two server-allowlisted administrator emails |
 | `/partner` | Business workspace, listings, booking confirmations and completion, replies to reviews | Administrators and accounts assigned the business role |
-| `/tourist` | Mobile City Guide home, categories, search, selected-place map, reference currency conversion, forecast, offers, favorites, personal bookings, reviews, profile and support | Signed-in accounts allowed by the private Site |
+| `/tourist` | Mobile City Guide home, categories, search, selected-place map, reference currency conversion, forecast, offers, favorites, personal bookings, reviews, profile and support | Accounts signed in through Supabase Auth |
 
 The root always redirects to `/tourist`. Management areas have separate URLs, with no workspace switcher in the header. Server policy grants administrator access only to `nncdecdgc@gmail.com` and `sayitatas@hotmail.com`, using the authenticated email. Other new users default to traveler; first-login ownership and stored `admin` roles do not grant administrator privileges. Role changes, data scope and listing ownership are enforced by the server. Client profile fields cannot grant permissions.
 
 ## Verification
 
-See [docs/VALIDATION.md](docs/VALIDATION.md). After building, run `node tests/smoke.mjs` and `node tests/regressions.mjs` for compiled Worker checks against isolated in-memory D1/R2. Run `node tests/access-policy.mjs` for the two-administrator policy, client-first routing and hidden hotels. The three suites pass 137 assertions, including upgrades of existing data. Test identities and bookings are never production seeds.
+Legacy D1/Sites smoke tests are archived in [docs/VALIDATION.md](docs/VALIDATION.md). The standalone Cloudflare build is now verified by [GitHub Actions](.github/workflows/verify.yml). For legacy checks, run `node tests/smoke.mjs` and `node tests/regressions.mjs` for compiled Worker checks against isolated in-memory D1/R2. Run `node tests/access-policy.mjs` for the two-administrator policy, client-first routing and hidden hotels. The three suites pass 137 assertions, including upgrades of existing data. Test identities and bookings are never production seeds.
 
 Full scope and milestones: [docs/City_Guide_Plan_RU.md](docs/City_Guide_Plan_RU.md).
 
