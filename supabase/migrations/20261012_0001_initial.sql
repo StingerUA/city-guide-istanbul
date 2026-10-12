@@ -114,7 +114,7 @@ as $$
   );
 $$;
 
-create or replace function public.cg_init_user()
+create or replace function private.cg_init_user()
 returns trigger
 language plpgsql security definer
 set search_path = ''
@@ -136,7 +136,8 @@ $$;
 drop trigger if exists cg_on_auth_user_created on auth.users;
 create trigger cg_on_auth_user_created
 after insert on auth.users
-for each row execute function public.cg_init_user();
+for each row execute function private.cg_init_user();
+revoke all on function private.cg_init_user() from public, anon, authenticated;
 
 -- Backfill existing Supabase users, if any.
 insert into public.cg_users(id,email,role,payload)
