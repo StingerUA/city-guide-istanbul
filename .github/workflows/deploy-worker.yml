@@ -30,3 +30,21 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify public Worker and Supabase Auth connectivity
+        shell: bash
+        run: |
+          URL="https://city-guide-istanbul.nncdecdgc.workers.dev"
+          for i in $(seq 1 15); do
+            HTTP_CODE=$(curl -sS -L --max-time 12 -o /tmp/city-guide-signin.html -w '%{http_code}' "$URL/signin" || true)
+            if [ "$HTTP_CODE" = "200" ] && grep -q 'City Guide' /tmp/city-guide-signin.html; then
+              break
+            fi
+            sleep 4
+          done
+          test "$HTTP_CODE" = "200" || { echo "Public sign-in is not returning 200: $HTTP_CODE"; exit 1; }
+          grep -q 'City Guide' /tmp/city-guide-signin.html
+          curl --fail --silent --show-error --max-time 12 "$URL/api/supabase/status" > /tmp/city-guide-status.json
+          grep -q '"configured":true' /tmp/city-guide-status.json
+          grep -q '"connected":true' /tmp/city-guide-status.json
+          echo "PUBLIC_WORKER_HEALTH_OK"
