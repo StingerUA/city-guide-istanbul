@@ -3,7 +3,17 @@
   "name": "city-guide-istanbul",
   "main": "vinext/server/app-router-entry",
   "compatibility_date": "2026-05-15",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": { "not_found_handling": "none" },
-  "observability": { "enabled": true }
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "not_found_handling": "none"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "SUPABASE_URL": "https://qfohfbuwnpjcbhmyosaf.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_C7LQEZnCjkbSpieihYUz4Q_cZRpII5k"
+  }
 }
