@@ -34,3 +34,24 @@ jobs:
           done
           cat /tmp/city-guide-worker.log
           exit 1
+
+      - name: Verify OAuth initiation, PKCE cookies and CSRF rejection
+        shell: bash
+        run: |
+          pnpm exec wrangler dev --config dist/server/wrangler.json --local --ip 127.0.0.1 --port 8788 --inspector-port 0 > /tmp/city-guide-oauth.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for n in $(seq 1 30); do
+            if curl -sS --max-time 2 -D /tmp/city-guide-oauth-headers -o /dev/null 'http://127.0.0.1:8788/api/auth/google?return_to=%2Fadmin'; then
+              if grep -qi 'location: https://qfohfbuwnpjcbhmyosaf.supabase.co/auth/v1/authorize' /tmp/city-guide-oauth-headers; then break; fi
+            fi
+            sleep 2
+          done
+          grep -qi '^HTTP/1.1 307' /tmp/city-guide-oauth-headers
+          grep -qi 'code_challenge=' /tmp/city-guide-oauth-headers
+          grep -qi 'cg_google_pkce_verifier=' /tmp/city-guide-oauth-headers
+          grep -qi 'cg_google_oauth_flow=' /tmp/city-guide-oauth-headers
+          curl -sS --max-time 10 -D /tmp/city-guide-oauth-invalid -o /dev/null 'http://127.0.0.1:8788/api/auth/google/callback?code=fake&flow=wrong'
+          grep -qi '^HTTP/1.1 307' /tmp/city-guide-oauth-invalid
+          grep -qi 'oauth_error=invalid_flow' /tmp/city-guide-oauth-invalid
+          echo "GOOGLE_OAUTH_LOCAL_SMOKE_OK"

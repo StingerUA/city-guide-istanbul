@@ -1,12 +1,23 @@
 'use client';
 
-import {useState,type FormEvent} from 'react';
+import {useEffect,useState,type FormEvent} from 'react';
 
 export default function SigninPage(){
   const [signup,setSignup]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   const [sent,setSent]=useState(false);
+  useEffect(()=>{
+    const reason=new URLSearchParams(window.location.search).get('oauth_error');
+    if(!reason)return;
+    setError(reason==='denied'?'Вход через Google отменён. / Google ile giriş iptal edildi.':
+      reason==='invalid_flow'?'Вход через Google устарел. Повторите попытку. / Google ile tekrar deneyin.':
+      'Не удалось войти через Google. Проверьте настройки Google в Supabase. / Google girişi başarısız.');
+  },[]);
+  function googleSignin(){
+    const next=new URLSearchParams(window.location.search).get('return_to')||'/tourist';
+    window.location.assign('/api/auth/google?return_to='+encodeURIComponent(next));
+  }
   async function submit(e:FormEvent<HTMLFormElement>){
     e.preventDefault();setError('');setBusy(true);
     const form=new FormData(e.currentTarget);
@@ -40,6 +51,23 @@ export default function SigninPage(){
           {busy?'…':signup?'Создать аккаунт / Kayıt ol':'Войти / Giriş yap'}
         </button>
       </form>}
+      <div style={{display:'flex',alignItems:'center',gap:12,margin:'20px 0',color:'#999',fontSize:12}}>
+        <div style={{height:1,background:'#e5dde4',flex:1}}/>
+        или / veya
+        <div style={{height:1,background:'#e5dde4',flex:1}}/>
+      </div>
+      <button type="button" onClick={googleSignin} aria-label="Войти с Google / Google ile giriş yap"
+        style={{display:'flex',alignItems:'center',justifyContent:'center',gap:12,padding:'12px 16px',
+          border:'1px solid #dadce0',borderRadius:9,background:'#fff',color:'#202124',fontWeight:600,
+          cursor:'pointer',width:'100%',fontSize:14}}>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path fill="#4285F4" d="M21.35 12.23c0-.71-.06-1.42-.19-2.11H12v4h5.24a4.5 4.5 0 0 1-1.95 2.95v2.46h3.15c1.84-1.69 2.91-4.18 2.91-7.3Z"/>
+          <path fill="#34A853" d="M12 21.75a9.76 9.76 0 0 0 6.44-2.35l-3.15-2.46a5.86 5.86 0 0 1-8.72-3.07H3.33v2.52A9.75 9.75 0 0 0 12 21.75Z"/>
+          <path fill="#FBBC05" d="M6.57 13.87a5.86 5.86 0 0 1 0-3.74V7.61H3.33a9.75 9.75 0 0 0 0 8.78l3.24-2.52Z"/>
+          <path fill="#EA4335" d="M12 6.14c1.34 0 2.54.46 3.48 1.37l2.75-2.75A9.37 9.37 0 0 0 12 2.25a9.75 9.75 0 0 0-8.67 5.36l3.24 2.52A5.83 5.83 0 0 1 12 6.14Z"/>
+        </svg>
+        Продолжить с Google / Google ile devam et
+      </button>
       <button type="button" onClick={()=>{setSignup(!signup);setSent(false);setError('')}}
         style={{marginTop:18,color:'#9b2458',textDecoration:'underline'}}>
         {signup?'Уже есть аккаунт? Войти':'Нет аккаунта? Зарегистрироваться'}
