@@ -3,13 +3,13 @@ import {AppError,profile,venue,canEdit,checkVenueMedia,boundedBody,seed,state,ha
 import {list,insert,insertIgnore,patch,remove,dataRequest,DataError} from '@/lib/supabase/data';
 import {venueInput,bookingInput} from '@/lib/validation';
 import {isAdminEmail} from '@/lib/access-policy';
-import {istanbulDate,isCategoryEnabled,type Venue,type Booking,type Review,type Profile} from '@/lib/model';
+import {istanbulDate,isCategoryEnabled,venueLocations,type Venue,type Booking,type Review,type Profile} from '@/lib/model';
 export const dynamic='force-dynamic';
 
 function failConflict(rows:unknown[]){if(!rows.length)throw new AppError('conflict',409)}
 function sameBooking(b:Booking,p:z.infer<typeof bookingInput>){
  const keys=['venueId','name','phone','date','time','guests','payment','note'] as const;
- return keys.every(key=>b[key]===p[key])&&b.endDate===(b.endDate===b.date?p.date:p.endDate);
+ return keys.every(key=>b[key]===p[key])&&((b.locationId||'main')===(p.locationId||'main'))&&b.endDate===(b.endDate===b.date?p.date:p.endDate);
 }
 export async function POST(req:Request){try{
  sameOrigin(req);
@@ -68,10 +68,13 @@ export async function POST(req:Request){try{
   if(!period&&(v.open<v.close?(p.time<v.open||p.time>=v.close):
     (v.open>v.close&&p.time<v.open&&p.time>=v.close)))throw new AppError('outside_hours');
   if(new Date(p.date+'T'+p.time+':00+03:00').getTime()<Date.now())throw new AppError('invalid_date');
+  const points=venueLocations(v);
+  const selectedPoint=points.find(point=>point.id===(p.locationId||points[0].id));
+  if(!selectedPoint)throw new AppError('invalid_location',400);
   const days=period?(Date.parse(end)-start.getTime())/86400000:1;
   if(days>90)throw new AppError('invalid_date');
   const total=Math.round(v.price*(period?days:v.bookingType==='ticket'?p.guests:1)*(1-v.discount/100)*100)/100;
-  const b:Booking={...p,endDate:end,venueName:v.name,userId:u.id,status:'pending',
+  const b:Booking={...p,locationId:selectedPoint.id,locationLabel:selectedPoint.label,endDate:end,venueName:v.name,userId:u.id,status:'pending',
    total,currency:v.currency,isDemo:true,createdAt:now};
   const output=await dataRequest<{id:string;duplicate:boolean}>('/rest/v1/rpc/cg_book_atomic',
     'POST',{}, {p_booking:b,p_user_id:u.id,p_expected_version:v.version});
