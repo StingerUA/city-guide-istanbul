@@ -192,7 +192,7 @@
 .venue-geo-map{width:100%;height:auto}
 .venue-map-canvas{width:100%;position:relative;overflow:hidden;background:#e9ece8;border:1px solid #e0e2df;border-radius:12px;user-select:none;cursor:grab}
 .venue-map-canvas.is-editable:active{cursor:grabbing}
-.venue-map-pin{position:absolute;transform:translate(-50%,-100%);z-index:3;background:#c23d7d;color:white;border:3px solid white;box-shadow:0 2px 10px #46213955;border-radius:50% 50% 50% 5%;rotate:-45deg;width:32px;height:32px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.venue-map-pin{position:absolute;transform:translate(-50%,-100%);z-index:3;background:#c23d7d;color:white;border:3px solid white;box-shadow:0 2px 10px #46213955;border-radius:50% 50% 50% 5%;width:32px;height:32px;display:grid;place-items:center;font-size:12px;font-weight:700}
 .venue-map-pin.active{background:#65254c;box-shadow:0 2px 12px #46213985;z-index:4}
 .venue-map-zoom{position:absolute;top:10px;right:10px;z-index:5;display:grid;gap:4px}
 .venue-map-zoom button{width:34px;height:34px;border-radius:8px;background:white;color:#674057;font-size:23px;box-shadow:0 1px 6px #0002}
