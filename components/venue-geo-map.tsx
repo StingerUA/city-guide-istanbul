@@ -1,7 +1,7 @@
 'use client';
 
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import type {VenueLocation} from '@/lib/model';
+import type {VenueLocation,Lang} from '@/lib/model';
 
 const TILE=256;
 const MAX_LAT=85.05112878;
@@ -23,14 +23,32 @@ type GeoMapProps={
  onPick?:(coordinates:{lat:number;lng:number})=>void;
  onSelect?:(id:string)=>void;
  height?:number;
+ lang?:Lang;
 };
-export default function VenueGeoMap({points,activeId,onPick,onSelect,height=320}:GeoMapProps){
+export default function VenueGeoMap({points,activeId,onPick,onSelect,height=320,lang='tr'}:GeoMapProps){
  const ref=useRef<HTMLDivElement>(null);
  const drag=useRef<{x:number;y:number;origin:{lat:number;lng:number};moved:boolean}|null>(null);
  const [size,setSize]=useState({width:600,height});
  const [zoom,setZoom]=useState(14);
  const [center,setCenter]=useState(()=>({lat:points[0]?.lat??41.0082,lng:points[0]?.lng??28.9784}));
  const active=points.find(p=>p.id===activeId);
+ const previousActive=useRef(activeId);
+ const signature=points.map(p=>p.id+':'+p.lat.toFixed(5)+':'+p.lng.toFixed(5)).join('|');
+ useEffect(()=>{
+   if(onPick||points.length<2||size.width<100)return;
+   for(let candidate=16;candidate>=4;candidate--){
+     const coords=points.map(p=>world(p.lat,p.lng,candidate));
+     const left=Math.min(...coords.map(p=>p.x)),right=Math.max(...coords.map(p=>p.x));
+     const top=Math.min(...coords.map(p=>p.y)),bottom=Math.max(...coords.map(p=>p.y));
+     if((right-left<size.width-90&&bottom-top<size.height-90)||candidate===4){
+       setZoom(candidate);
+       setCenter(coordinate((left+right)/2,(top+bottom)/2,candidate));
+       break;
+     }
+   }
+ // signature captures values even if the array identity changes every render.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[signature,size.width,size.height,!!onPick]);
  useEffect(()=>{
    const obs=new ResizeObserver(entries=>{
      if(entries[0])setSize({width:entries[0].contentRect.width,height:entries[0].contentRect.height});
@@ -38,7 +56,7 @@ export default function VenueGeoMap({points,activeId,onPick,onSelect,height=320}
    if(ref.current)obs.observe(ref.current);
    return ()=>obs.disconnect();
  },[]);
- useEffect(()=>{if(active)setCenter({lat:active.lat,lng:active.lng})},[activeId]);
+ useEffect(()=>{if(active&&previousActive.current!==activeId)setCenter({lat:active.lat,lng:active.lng});previousActive.current=activeId},[activeId,active?.lat,active?.lng]);
  const tiles=useMemo(()=>{
    const origin=world(center.lat,center.lng,zoom);
    const left=origin.x-size.width/2,top=origin.y-size.height/2;
@@ -93,7 +111,7 @@ export default function VenueGeoMap({points,activeId,onPick,onSelect,height=320}
  return <div className="venue-geo-map">
    <div ref={ref} className={'venue-map-canvas'+(onPick?' is-editable':'')}
      style={{height,touchAction:'none'}} role="group"
-     aria-label={onPick?'Haritada bir konum seçin / Select a location on the map':'İşletme konumları'}
+     aria-label={onPick?(lang==='tr'?'Haritadan konum seç':lang==='ru'?'Выберите место на карте':'Select a location on the map'):(lang==='tr'?'İşletme konumları':lang==='ru'?'Точки заведения':'Venue locations')}
      onPointerDown={handleDown} onPointerMove={handleMove} onPointerUp={handleUp}
      onPointerCancel={()=>{drag.current=null}}>
      {tiles.map(tile=><img key={tile.key} src={tile.url} alt="" draggable={false}
@@ -112,6 +130,6 @@ export default function VenueGeoMap({points,activeId,onPick,onSelect,height=320}
      </div>
      <span className="venue-map-attribution">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a></span>
    </div>
-   {onPick&&<p className="venue-map-help">Haritaya dokunarak bir konum belirleyin. Haritayı sürükleyip + / − ile yakınlaştırabilirsiniz.</p>}
+   {onPick&&<p className="venue-map-help">{lang==='tr'?'Haritaya dokunun, sürükleyin veya + / − ile yakınlaştırın.':lang==='ru'?'Нажмите на карту, перемещайте её или используйте + / − для масштаба.':'Click the map to select a point. Drag or use + / − to zoom.'}</p>}
  </div>;
 }
