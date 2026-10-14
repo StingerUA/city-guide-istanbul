@@ -97,7 +97,7 @@ function VenueEditor({value,onClose}:{value:Venue|null;onClose:()=>void}){const{
    completed++;
    const url=d.url;
    setV(prev=>{
-     const all=[...new Set([...(prev.gallery||[]),url])].slice(0,60);
+     const all=[...new Set(gallery?[...(prev.gallery||[]),url]:[url,...(prev.gallery||[])])].slice(0,60);
      return {...prev,image:gallery?(prev.image||url):url,gallery:all};
    });
   }
