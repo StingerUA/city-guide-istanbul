@@ -54,7 +54,7 @@ export default function VenueLocationEditor({value,onChange,lang}:Props){
      {points.length>1&&<button type="button" className="button" onClick={remove}>{t.remove}</button>}
    </div>
    <VenueGeoMap points={points} activeId={selected.id}
-      onPick={coords=>updatePoint(selected.id,coords)} onSelect={setActive} height={330}/>
+      onPick={coords=>updatePoint(selected.id,coords)} onSelect={setActive} lang={lang} height={330}/>
    <div className="venue-branch-fields">
      <label><span>{t.name}</span>
        <input required maxLength={100} value={selected.label}
