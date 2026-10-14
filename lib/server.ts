@@ -45,13 +45,18 @@ export async function linkedMedia(url:string,ownerId?:string){
 }
 export async function checkVenueMedia(u:Profile,v:{image:string;gallery:string[];services:{image:string}[]}){
  const refs=[...new Set([v.image,...v.gallery,...v.services.map(s=>s.image)].filter(s=>s.startsWith('/api/media/')))];
+ if(!refs.length)return;
+ // One Supabase request for all photos; large partner galleries must not trigger 60 sequential lookups.
+ const prefix='/api/media/';
+ const ids=refs.map(url=>url.slice(prefix.length));
+ const rows=await list<{id:string;user_id:string}>('cg_uploads',{id:'in.('+ids.join(',')+')'},'id,user_id');
+ const owners=new Map(rows.map(row=>[row.id,row.user_id]));
  for(const url of refs){
-   const rows=await list<{user_id:string}>('cg_uploads',
-     {id:'eq.'+url.slice('/api/media/'.length)},'user_id');
-   if(!rows.length)throw new AppError('invalid_image');
-   if(u.role!=='admin'&&rows[0].user_id!==u.id&&
-      !await linkedMedia(url,u.role==='partner'?u.id:undefined))
-     throw new AppError('forbidden',403);
+  const id=url.slice(prefix.length),owner=owners.get(id);
+  if(!owner)throw new AppError('invalid_image');
+  if(u.role!=='admin'&&owner!==u.id&&
+     !await linkedMedia(url,u.role==='partner'?u.id:undefined))
+    throw new AppError('forbidden',403);
  }
 }
 export async function boundedBody(req:Request,limit:number,error='invalid_input'){

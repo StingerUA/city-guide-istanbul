@@ -11,11 +11,16 @@ export const categoryImages:Partial<Record<Category,string>>={
  history:'/images/category-history.webp',
  nature:'/images/category-nature.webp',
 };
+export type VenueLocation={id:string;label:string;address:string;lat:number;lng:number};
+/** Legacy venues without locations continue to have their original single point. */
+export function venueLocations(v:Pick<Venue,'locations'|'address'|'lat'|'lng'|'name'>):VenueLocation[]{
+ return v.locations?.length?v.locations:[{id:'main',label:v.name,address:v.address,lat:v.lat,lng:v.lng}];
+}
 export type Service={id:string;name:Localized;price:number;duration:number;image:string};
-export type Venue={id:string;name:string;category:Category;subcategory:string;city:string;district:string;address:string;lat:number;lng:number;description:Localized;image:string;gallery:string[];phone:string;website:string;open:string;close:string;price:number;currency:'TRY'|'USD'|'EUR';bookingType:'table'|'rental'|'appointment'|'ticket'|'stay'|'none';capacity:number;alcohol:boolean;status:'draft'|'pending'|'published'|'archived';isDemo:boolean;ownerId:string;updatedAt:string;version:number;discount:number;services:Service[]};
+export type Venue={id:string;name:string;category:Category;subcategory:string;city:string;district:string;address:string;lat:number;lng:number;description:Localized;image:string;gallery:string[];locations?:VenueLocation[];phone:string;website:string;open:string;close:string;price:number;currency:'TRY'|'USD'|'EUR';bookingType:'table'|'rental'|'appointment'|'ticket'|'stay'|'none';capacity:number;alcohol:boolean;status:'draft'|'pending'|'published'|'archived';isDemo:boolean;ownerId:string;updatedAt:string;version:number;discount:number;services:Service[]};
 export type Surface='admin'|'partner'|'tourist';
 export type Profile={id:string;name:string;email:string;phone:string;language:Lang;homeAddress:string;role:'admin'|'partner'|'tourist'};
-export type Booking={id:string;venueId:string;venueName:string;userId:string;name:string;phone:string;date:string;time:string;endDate:string;guests:number;status:'pending'|'confirmed'|'cancelled'|'completed';total:number;currency:string;payment:'onsite'|'demo';isDemo:boolean;note:string;createdAt:string};
+export type Booking={id:string;venueId:string;locationId?:string;locationLabel?:string;venueName:string;userId:string;name:string;phone:string;date:string;time:string;endDate:string;guests:number;status:'pending'|'confirmed'|'cancelled'|'completed';total:number;currency:string;payment:'onsite'|'demo';isDemo:boolean;note:string;createdAt:string};
 export type Review={id:string;venueId:string;bookingId:string;userId:string;author:string;rating:number;text:string;createdAt:string;isDemo:boolean;status?:'published'|'hidden';reply?:string;version?:number};
 export type Feedback={id:string;userId:string;author:string;kind:'app'|'help';rating:number;text:string;createdAt:string;updatedAt:string;status:'open'|'in_progress'|'resolved';reply:string;version:number};
 export type AppState={user:Profile|null;venues:Venue[];bookings:Booking[];favorites:string[];reviews:Review[];mode:'live'|'preview';revision?:string;users?:Profile[];feedback?:Feedback[]};

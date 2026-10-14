@@ -171,3 +171,53 @@
 .category-photo-grid>button>span{font-size:14px}
 @media(max-width:360px){.tourist-navigation button{font-size:10px}}
 .ticket-heading .badge,.trip-heading .badge,.review-author .badge,.approval-copy .badge,.owner-role{font-size:14px!important}
+
+
+/* Partner location picker, shared branch map and multi-photo galleries */
+.venue-branch-editor{display:grid;gap:12px;border:1px solid #f1dce7;padding:16px;border-radius:15px;background:#fffafc}
+.venue-branch-editor h3{font-size:15px;font-weight:650;color:#7e2b57}
+.venue-branch-count{font-size:11px;color:#9c7590;background:#f6e9f0;border-radius:8px;padding:4px 7px;margin-left:7px}
+.venue-branch-hint,.venue-map-help{font-size:11px;line-height:1.5;color:#886e81}
+.venue-map-help{margin:6px 0 0}
+.venue-branch-list{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px;scrollbar-width:thin}
+.venue-branch-tab{border:1px solid #ead7e2;border-radius:10px;background:#fff;padding:8px 11px;display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:12px;color:#815a71}
+.venue-branch-tab span{background:#f3e1eb;color:#a83b6e;border-radius:50%;width:20px;height:20px;display:grid;place-items:center}
+.venue-branch-tab.active,.venue-visitor-branch.active{border-color:#c24c82;background:#fff0f7;color:#a32162}
+.venue-branch-actions{display:flex;flex-wrap:wrap;gap:8px}
+.venue-branch-actions .button{font-size:11px;padding:7px 10px;min-height:32px}
+.venue-branch-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.venue-branch-fields label{display:grid;gap:6px;color:#76536d;font-size:11px}
+.venue-branch-fields input{background:white;border:1px solid #e8d7e1;border-radius:9px;padding:11px;min-width:0;font-size:12px}
+.venue-branch-coordinates{font:11px/1.5 monospace;color:#9a748b}
+.venue-geo-map{width:100%;height:auto}
+.venue-map-canvas{width:100%;position:relative;overflow:hidden;background:#e9ece8;border:1px solid #e0e2df;border-radius:12px;user-select:none;cursor:grab}
+.venue-map-canvas.is-editable:active{cursor:grabbing}
+.venue-map-pin{position:absolute;transform:translate(-50%,-100%);z-index:3;background:#c23d7d;color:white;border:3px solid white;box-shadow:0 2px 10px #46213955;border-radius:50% 50% 50% 5%;width:32px;height:32px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.venue-map-pin.active{background:#65254c;box-shadow:0 2px 12px #46213985;z-index:4}
+.venue-map-zoom{position:absolute;top:10px;right:10px;z-index:5;display:grid;gap:4px}
+.venue-map-zoom button{width:34px;height:34px;border-radius:8px;background:white;color:#674057;font-size:23px;box-shadow:0 1px 6px #0002}
+.venue-map-attribution{position:absolute;bottom:0;right:0;padding:2px 6px;color:#353535;background:#ffffffd9;font-size:9px;z-index:5}
+.venue-map-attribution a{text-decoration:underline}
+.venue-cover-button{position:absolute;left:4px;top:4px;display:grid;place-items:center;background:#fffefa;border-radius:7px;padding:3px 6px;font-size:15px;color:#b52c6a}
+.venue-cover-button[aria-pressed=true]{background:#c03c77;color:#fff}
+.venue-gallery-view{width:100%}
+.venue-gallery-main{position:relative;border-radius:13px;overflow:hidden}
+.venue-gallery-main>img{display:block;width:100%;height:255px;object-fit:cover}
+.venue-gallery-main>button{position:absolute;top:50%;transform:translateY(-50%);height:36px;width:36px;border-radius:50%;background:#fffdf4e8;color:#8c2758;font-size:25px;display:grid;place-items:center;box-shadow:0 2px 8px #0002}
+.venue-gallery-previous{left:10px}.venue-gallery-next{right:10px}
+.venue-gallery-counter{position:absolute;right:12px;bottom:11px;color:white;background:#242124aa;border-radius:10px;padding:4px 9px;font-size:11px}
+.venue-gallery-thumbnails{display:flex;gap:8px;overflow-x:auto;margin:10px 0 17px;padding-bottom:5px;scrollbar-width:thin}
+.venue-gallery-thumbnails button{flex:0 0 68px;height:55px;border-radius:8px;overflow:hidden;border:2px solid transparent;opacity:.72}
+.venue-gallery-thumbnails button.active{border-color:#c9427b;opacity:1}
+.venue-gallery-thumbnails img{width:100%;height:100%;object-fit:cover}
+.venue-photo-placeholder{display:grid;place-items:center;background:#f5e8f1;color:#b55b89}
+.venue-visitor-locations{display:grid;gap:15px}
+.venue-visitor-locations h4{font-size:14px;font-weight:650}
+.venue-visitor-branches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:230px;overflow:auto}
+.venue-visitor-branch{display:grid;gap:5px;text-align:left;border:1px solid #ecdae5;border-radius:10px;padding:10px;color:#81536a;min-width:0}
+.venue-visitor-branch b{font-size:12px}
+.venue-visitor-branch small{font-size:10px;line-height:1.4;word-break:break-word}
+.venue-visitor-locations>.button{width:max-content;font-size:12px}
+.map-frame>.venue-geo-map{height:100%}
+.map-frame .venue-map-canvas{height:100%!important;border:0;border-radius:0}
+@media(max-width:600px){.venue-branch-fields,.venue-visitor-branches{grid-template-columns:1fr}.venue-gallery-main>img{height:205px}.venue-branch-editor{padding:11px}.venue-map-pin{width:28px;height:28px}}
