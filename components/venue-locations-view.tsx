@@ -13,7 +13,7 @@ export function VenueLocationsView({venue,lang}: {venue:Venue;lang:Lang}){
  const [activeId,setActiveId]=useState(points[0].id);
  const selected=points.find(p=>p.id===activeId)||points[0];
  return <div className="venue-visitor-locations">
-   <VenueGeoMap points={points} activeId={selected.id} onSelect={setActiveId} height={280}/>
+   <VenueGeoMap points={points} activeId={selected.id} onSelect={setActiveId} lang={lang} height={280}/>
    <h4>{words[lang].branches} ({points.length})</h4>
    <div className="venue-visitor-branches">
      {points.map((p,i)=><button key={p.id} type="button"
