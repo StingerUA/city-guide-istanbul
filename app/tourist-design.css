@@ -1,0 +1,153 @@
+@font-face{font-family:CityGuideScript;src:url('/fonts/Italianno-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+html:root{--cg-deep:#c43d76;--cg-mid:#ce668f;--cg-pale:#f5bcd2;--cg-tint:#faedf3;--cg-ink:#263b40}
+html[data-city-theme=blue]{--cg-deep:#28659b;--cg-mid:#4d8fbc;--cg-pale:#b6d8ee;--cg-tint:#eef6fb;--primary:#28659b;--ring:#4d8fbc}
+html[data-city-theme=green]{--cg-deep:#165344;--cg-mid:#477f6b;--cg-pale:#b4d4c4;--cg-tint:#edf5f0;--primary:#165344;--ring:#477f6b}
+.reference-guide.tourist-app{min-height:100svh;background:#fff;color:#202126;padding-bottom:0}
+.reference-guide .tourist-header{height:150px;min-height:0;position:relative;display:flex;align-items:flex-start;justify-content:center;padding:20px 24px 0;border:0;border-radius:0 0 50% 50% / 0 0 22% 22%;background:linear-gradient(165deg,var(--cg-deep),var(--cg-pale));box-shadow:none;overflow:visible;z-index:1}
+.reference-guide.reference-home .tourist-header{height:260px;background:linear-gradient(140deg,#f14d90,var(--cg-pale));border-radius:0 0 50% 50% / 0 0 18% 18%}
+html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[data-city-theme=green] .reference-guide.reference-home .tourist-header{background:linear-gradient(140deg,var(--cg-deep),var(--cg-pale))}
+.reference-guide .tourist-brand{display:block;margin:0;padding:0;color:white!important;font-family:CityGuideScript,cursive!important;font-size:86px!important;font-weight:400!important;font-style:normal;letter-spacing:0!important;line-height:1.05;white-space:nowrap;text-shadow:none}
+.reference-guide .reference-back{position:absolute;left:max(24px,calc((100% - 1060px)/2));top:50px;width:44px;height:44px;display:grid;place-items:center;color:#fff;border-radius:50%}
+.reference-guide .reference-back svg{width:26px;height:26px}
+.reference-guide .tourist-content{position:relative;max-width:1060px;padding:0 28px 120px;margin:0 auto;z-index:2}
+.reference-guide.reference-home .tourist-content{max-width:760px;margin-top:-128px}
+.reference-guide .traveler-greeting{display:flex;align-items:center;justify-content:space-between;gap:15px;max-width:640px;margin:0 auto 12px;padding:0;color:#fff}
+.reference-guide .traveler-greeting p{margin:0;font-size:22px;font-weight:400;line-height:1.35;color:inherit}
+.reference-guide .reference-exchange{display:flex;align-items:center;gap:5px;background:#fff;color:var(--cg-mid);padding:5px 9px 5px 5px;border-radius:22px;min-height:36px;font-size:15px;line-height:1}
+.reference-guide .reference-exchange svg{width:27px;height:27px}
+.reference-guide .weather-card{position:relative;isolation:isolate;display:block;max-width:640px;width:100%;height:auto;min-height:0;aspect-ratio:2.13;margin:0 auto;border:0;border-radius:21px;overflow:hidden;background:linear-gradient(130deg,#d7e8e8 5%,#faf4df 70%,#c7dcdf);box-shadow:none;color:white}
+.reference-guide .weather-card:before,.reference-guide .weather-card:after{display:none}
+.reference-guide .weather-cloudscape{position:absolute;z-index:-1;bottom:0;left:0;width:100%;height:54%;opacity:.92}
+.reference-guide .weather-content{position:relative;display:flex;justify-content:space-between;align-items:flex-start;padding:28px 30px 14px;height:100%;width:100%}
+.reference-guide .weather-content h2{font-size:30px;font-weight:400;line-height:1.2;letter-spacing:0;margin:12px 0 0;color:#fff;max-width:68%;text-shadow:0 1px 10px #637c8430}
+.reference-guide .weather-value{display:flex;align-items:center;flex-direction:column;width:30%;gap:0;flex:none;color:#fff}
+.reference-guide .weather-value>svg:not(.spin){width:100%;height:auto;max-width:145px;filter:none}
+.reference-guide .weather-value strong{font-size:43px;line-height:1.1;font-weight:700;letter-spacing:-1px;margin:0}
+.reference-guide .reference-weather-retry{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;padding:5px 7px;background:#fff9;border-radius:6px;color:#526569;min-height:30px}
+.reference-guide .reference-weather-retry svg{width:15px;height:15px;color:inherit;filter:none}
+.reference-guide .weather-error{position:absolute;left:20px;bottom:16px;color:#526569;font-size:12px;max-width:65%}
+.reference-guide .weather-credit{position:absolute;right:9px;bottom:5px;font-size:9px;line-height:1.2;color:#374a52;background:#ffffffb0;padding:2px 4px;border-radius:3px}
+.reference-guide .tourist-search{display:flex;align-items:center;gap:10px;background:var(--cg-tint);border:0;border-radius:22px;box-shadow:none;max-width:640px;height:45px;padding:0 15px 0 21px;margin:27px auto 0;color:var(--cg-mid)}
+.reference-guide .tourist-search input{width:100%;height:100%;min-width:0;background:transparent;border:0;box-shadow:none;color:#73354d;font-size:18px!important;padding:0;outline:none}
+.reference-guide .tourist-search input::placeholder{color:var(--cg-mid);opacity:1}
+.reference-guide .tourist-search input:focus-visible{box-shadow:none;outline:0}
+.reference-guide .tourist-search:focus-within{outline:2px solid var(--cg-mid);outline-offset:3px}
+.reference-guide .tourist-search button{display:grid;place-items:center;flex:none;width:38px;height:44px;color:var(--cg-mid);background:transparent;border:0;padding:0;position:static}
+.reference-guide .tourist-search>svg{flex:none;color:var(--cg-mid)}
+.reference-guide .home-categories{margin:34px 0 0;padding:0;border:0;background:transparent}
+.reference-guide .category-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 17px;margin:0;padding:0}
+.reference-guide .category-photo-grid>button{position:relative;display:block;width:100%;height:auto;aspect-ratio:1.38;min-width:0;overflow:hidden;border:1px solid #f2e8ed;border-radius:20px;padding:0;background:#f5f5f5;box-shadow:0 5px 9px color-mix(in srgb,var(--cg-mid) 32%,transparent);text-align:center;transition:box-shadow .15s}
+.reference-guide .category-photo-grid>button:hover{box-shadow:0 5px 13px color-mix(in srgb,var(--cg-mid) 48%,transparent);transform:none}
+.reference-guide .category-photo-grid>button:after{display:none}
+.reference-guide .category-photo-grid>button>svg{display:block;width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.reference-guide .category-photo-grid>button>span{position:absolute;display:block;left:0;right:0;bottom:0;padding:6px 2px 7px;background:#15171992;color:#fff;font-size:20px;font-weight:400;line-height:1.2;z-index:1;text-shadow:none;letter-spacing:0}
+.reference-guide .reference-catalog{padding:0 0 25px}
+.reference-guide .reference-category-heading{position:relative;display:flex;justify-content:center;align-items:center;margin:-23px 0 0;min-height:54px;padding:0 100px}
+.reference-guide .reference-category-heading h1{display:inline-block;margin:0;max-width:100%;padding:9px 26px 10px;border-radius:12px;background:#fff;color:var(--cg-mid);box-shadow:0 2px 5px #00000014;font-size:27px;line-height:1.2;font-weight:800;text-transform:uppercase;text-align:center;letter-spacing:0}
+.reference-guide .reference-map-button{position:absolute;right:0;top:-6px;min-height:65px;min-width:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 8px;border:1px solid var(--cg-tint);background:white;color:var(--cg-mid);border-radius:12px;box-shadow:0 2px 5px #0000000a;font-size:12px}
+.reference-guide .reference-map-button svg{width:24px;height:29px}
+.reference-guide .reference-subcategories{display:flex;align-items:stretch;gap:21px;width:100%;margin:25px 0 27px;padding:4px 2px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.reference-guide .reference-subcategories::-webkit-scrollbar{display:none}
+.reference-guide .reference-subcategories>button{display:flex;flex:0 0 120px;flex-direction:column;align-items:center;gap:11px;position:relative;padding:0 0 19px;color:var(--cg-ink);font-size:18px;line-height:1.2;white-space:nowrap}
+.reference-guide .reference-icon-frame{display:flex;align-items:center;justify-content:center;width:120px;height:103px;border:1px solid var(--cg-tint);border-radius:15px;box-shadow:0 1px 5px #dca6bd22;background:#fff}
+.reference-guide .reference-icon-frame img{width:82px;height:82px;object-fit:contain}
+.reference-guide .reference-subcategories>button.active:after{content:'';position:absolute;bottom:1px;left:0;right:0;height:3px;border-radius:3px;background:var(--cg-mid);box-shadow:0 1px 3px var(--cg-pale)}
+.reference-guide .reference-category-picker{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:22px auto;max-width:760px}
+.reference-guide .reference-category-picker button{border:1px solid var(--cg-tint);border-radius:20px;padding:8px 14px;font-size:14px;color:var(--cg-deep);background:#fff}
+.reference-guide .reference-place-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:24px;margin:0 auto}
+.reference-guide .reference-place-card{display:block;border:1px solid #ededed;border-radius:15px;box-shadow:0 1px 5px #00000010;background:#fff;padding:18px;min-width:0;overflow:hidden}
+.reference-guide .reference-place-card h2{font-size:20px;font-weight:750;text-transform:uppercase;line-height:1.2;color:#131513;letter-spacing:-.2px;margin:0}
+.reference-guide .reference-place-address{font-size:15px;font-weight:400;color:#90918f;line-height:1.3;margin:2px 0 17px}
+.reference-guide .reference-place-photo{position:relative;display:block;width:100%;aspect-ratio:1.83;border-radius:6px;overflow:hidden;background:#f2f4f2;padding:0;margin:0}
+.reference-guide .reference-place-photo>img,.reference-guide .reference-place-photo>.photo-fallback{width:100%;height:100%;object-fit:cover;border-radius:0}
+.reference-guide .reference-photo-count{position:absolute;right:8px;bottom:7px;display:flex;align-items:center;gap:5px;color:#fff;background:#0003;border-radius:3px;padding:2px 4px;font-size:12px}
+.reference-guide .reference-place-actions{display:grid;grid-template-columns:1fr 1.1fr;gap:10px;margin:14px 10px 0}
+.reference-guide .reference-place-actions>button,.reference-guide .reference-place-actions>a{display:flex;align-items:center;justify-content:center;min-height:42px;padding:8px 7px;border:0;border-radius:5px;background:var(--cg-mid);color:#fff;font-size:17px;font-weight:400;line-height:1.2;text-align:center;text-decoration:none}
+.reference-guide .reference-place-actions>button:hover,.reference-guide .reference-place-actions>a:hover{background:var(--cg-deep)}
+.reference-guide .reference-clear{margin:0 0 20px}
+.reference-hours{display:flex;align-items:center;gap:12px;font-size:23px;padding:15px 0}
+.reference-guide .reference-navigation.tourist-navigation{position:fixed;bottom:0;left:0;right:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;gap:0;width:100%;max-width:none;height:76px;min-height:76px;padding:0 max(20px,calc((100% - 700px)/2)) env(safe-area-inset-bottom);border:0;border-top:1px solid #f1f1f1;border-radius:0;background:#fff;box-shadow:0 -2px 7px #00000005;transform:none;backdrop-filter:none}
+.reference-guide .reference-navigation>button,.reference-guide .reference-navigation>a{display:flex;align-items:center;justify-content:center;gap:0;position:relative;width:100%;height:64px;padding:11px 0 8px;color:var(--cg-mid);background:transparent;border:0;border-radius:0;box-shadow:none;min-width:0}
+.reference-guide .reference-navigation>button:before,.reference-guide .reference-navigation>a:before{display:none}
+.reference-guide .reference-navigation>button>svg,.reference-guide .reference-navigation>a>svg{width:38px;height:38px;opacity:.85}
+.reference-guide .reference-navigation>button.active>svg{opacity:1}
+.reference-guide .reference-navigation>.reference-home-pin{height:68px;width:68px;justify-self:center;align-self:start;margin-top:-27px;padding:0;border:5px solid #fff;border-radius:50%;box-shadow:0 3px 5px #0002;background:linear-gradient(150deg,var(--cg-deep),var(--cg-pale))}
+.reference-guide .reference-navigation>.reference-home-pin>svg{width:50px;height:50px;opacity:1}
+.reference-guide .reference-account-links{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.reference-guide .reference-appearance{margin:0 0 23px}
+.reference-guide .reference-appearance h2{font-size:18px;margin-bottom:14px}
+.reference-theme-options{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:19px}
+.reference-theme{display:flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #eee;border-radius:9px;font-size:14px;background:#fff;color:#3e4548}
+.reference-theme[aria-pressed=true]{border-color:var(--cg-mid);background:var(--cg-tint)}
+.reference-theme>span{width:18px;height:18px;border-radius:50%;background:#c43d76}
+.reference-theme.blue>span{background:#28659b}.reference-theme.green>span{background:#165344}
+.reference-guide .tourist-content>.page-title{padding-top:25px}
+.reference-guide .tourist-content>.page-title h1{font-size:27px}
+.reference-guide .connection-notice{margin-top:30px}
+.reference-guide .loading-line{margin:20px 0}
+.reference-guide .button.primary{background:var(--cg-deep);border-color:var(--cg-deep)}
+.reference-guide button:focus-visible,.reference-guide a:focus-visible{outline:2px solid var(--cg-deep);outline-offset:4px}
+@media(max-width:600px){
+ .reference-guide .tourist-header{height:129px;padding:22px 18px 0;border-radius:0 0 50% 50% / 0 0 17% 17%}
+ .reference-guide.reference-home .tourist-header{height:194px;padding-top:17px}
+ .reference-guide .tourist-brand{font-size:73px!important}
+ .reference-guide .reference-back{left:16px;top:44px;width:34px;height:34px}
+ .reference-guide .reference-back svg{width:24px;height:24px}
+ .reference-guide .tourist-content{padding:0 22px 104px;width:100%;max-width:100%}
+ .reference-guide.reference-home .tourist-content{margin-top:-104px;padding:0 24px 104px}
+ .reference-guide .traveler-greeting{margin:0 8px 10px;gap:8px}
+ .reference-guide .traveler-greeting p{font-size:17px}
+ .reference-guide .reference-exchange{font-size:13px;min-height:31px;padding:3px 6px 3px 3px;gap:2px}
+ .reference-guide .reference-exchange svg{width:24px;height:24px}
+ .reference-guide .weather-card{aspect-ratio:2.02;border-radius:17px;width:calc(100% - 16px)}
+ .reference-guide .weather-content{padding:19px 20px 10px}
+ .reference-guide .weather-content h2{font-size:21px;margin-top:15px}
+ .reference-guide .weather-value{width:33%}
+ .reference-guide .weather-value strong{font-size:31px}
+ .reference-guide .weather-error{font-size:10px;left:15px;bottom:20px}
+ .reference-guide .weather-credit{font-size:8px;right:7px;bottom:4px}
+ .reference-guide .reference-weather-retry{font-size:10px;padding:4px;gap:3px}
+ .reference-guide .tourist-search{height:38px;margin:20px 10px 0;padding:0 9px 0 26px;border-radius:19px}
+ .reference-guide .tourist-search input{font-size:16px!important}
+ .reference-guide .tourist-search button{height:38px;width:31px}
+ .reference-guide .tourist-search button svg{width:22px;height:22px}
+ .reference-guide .home-categories{margin-top:18px}
+ .reference-guide .category-photo-grid{gap:25px 20px}
+ .reference-guide .category-photo-grid>button{aspect-ratio:1.33;border-radius:17px;box-shadow:0 4px 7px color-mix(in srgb,var(--cg-mid) 32%,transparent)}
+ .reference-guide .category-photo-grid>button>span{font-size:13px;padding:5px 1px 6px;line-height:1.1}
+ .reference-guide .reference-category-heading{margin-top:-22px;min-height:40px;padding:0 78px 0 45px}
+ .reference-guide .reference-category-heading h1{font-size:22px;min-width:150px;padding:8px 12px;border-radius:9px}
+ .reference-guide .reference-map-button{min-width:65px;min-height:51px;top:-6px;right:-7px;border-radius:10px;font-size:10px;padding:4px 5px;gap:0}
+ .reference-guide .reference-map-button svg{width:21px;height:25px}
+ .reference-guide .reference-subcategories{gap:12px;width:calc(100% + 22px);margin:20px 0 20px;padding:3px 1px 0}
+ .reference-guide .reference-subcategories>button{flex-basis:87px;gap:11px;padding-bottom:17px;font-size:14px;white-space:normal;line-height:1.15}
+ .reference-guide .reference-icon-frame{width:87px;height:76px;border-radius:12px;flex:none}
+ .reference-guide .reference-icon-frame img{width:63px;height:63px}
+ .reference-guide .reference-subcategories>button.active:after{height:3px}
+ .reference-guide .reference-place-list{grid-template-columns:1fr;gap:18px;max-width:410px;padding:0 17px}
+ .reference-guide .reference-place-card{padding:13px;border-radius:12px}
+ .reference-guide .reference-place-card h2{font-size:15px;line-height:1.2;letter-spacing:0}
+ .reference-guide .reference-place-address{font-size:12px;line-height:1.2;margin:2px 0 14px}
+ .reference-guide .reference-place-photo{aspect-ratio:1.83;border-radius:5px}
+ .reference-guide .reference-photo-count{font-size:10px;right:5px;bottom:5px}
+ .reference-guide .reference-place-actions{gap:9px;margin:12px 7px 0}
+ .reference-guide .reference-place-actions>button,.reference-guide .reference-place-actions>a{font-size:14px;min-height:36px;padding:7px 4px;border-radius:4px}
+ .reference-guide .reference-navigation.tourist-navigation{height:66px;min-height:66px;padding:0 12px env(safe-area-inset-bottom)}
+ .reference-guide .reference-navigation>button,.reference-guide .reference-navigation>a{height:60px;padding:9px 0}
+ .reference-guide .reference-navigation>button>svg,.reference-guide .reference-navigation>a>svg{width:33px;height:33px}
+ .reference-guide .reference-navigation>.reference-home-pin{width:65px;height:65px;margin-top:-25px;padding:0}
+ .reference-guide .reference-navigation>.reference-home-pin>svg{width:47px;height:47px}
+ .reference-guide .reference-account-links{gap:7px}
+ .reference-guide .reference-account-links .button{padding:9px}
+ .reference-guide .reference-appearance{padding:19px}
+ .reference-guide .map-layout{height:560px}
+}
+@media(max-width:360px){
+ .reference-guide.reference-home .tourist-content{padding-left:17px;padding-right:17px}
+ .reference-guide .tourist-content{padding-left:17px;padding-right:17px}
+ .reference-guide .reference-place-list{padding:0 10px}
+ .reference-guide .reference-place-actions{margin-left:0;margin-right:0}
+ .reference-guide .reference-place-actions>button,.reference-guide .reference-place-actions>a{font-size:13px}
+ .reference-guide .reference-category-heading{padding-left:15px}
+ .reference-guide .reference-category-heading h1{font-size:20px;min-width:135px}
+}
