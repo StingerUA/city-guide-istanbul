@@ -4,7 +4,7 @@ import {list,storageRequest} from '@/lib/supabase/data';
 export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
  try {
   const u=await profile();const {id}=await params;
-  if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/.test(id))throw new AppError('not_found',404);
+  if(!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(id))throw new AppError('not_found',404);
   const rows=await list<{key:string;content_type:string;user_id:string}>(
     'cg_uploads',{id:'eq.'+id},'key,content_type,user_id');
   if(!rows.length)throw new AppError('not_found',404);
@@ -15,7 +15,8 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
   const obj=await storageRequest('city-guide-photos/'+row.key);
   return new Response(obj.body,{headers:{
     'Content-Type':row.content_type,'X-Content-Type-Options':'nosniff',
-    'Cache-Control':'private, no-cache'
+    'Cache-Control':'private, no-store','Content-Disposition':'inline',
+    'Cross-Origin-Resource-Policy':'same-origin'
   }});
  }catch(e){return handleError(e)}
 }

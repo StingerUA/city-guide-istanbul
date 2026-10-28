@@ -1,4 +1,6 @@
 import {z} from 'zod';
+import {env} from 'cloudflare:workers';
+import {jsonBody,enforceLimit} from '@/lib/http-security';
 import {AppError,profile,venue,canEdit,checkVenueMedia,boundedBody,seed,state,handleError,sameOrigin} from '@/lib/server';
 import {list,insert,insertIgnore,patch,remove,dataRequest,DataError} from '@/lib/supabase/data';
 import {venueInput,bookingInput} from '@/lib/validation';
@@ -14,10 +16,11 @@ function sameBooking(b:Booking,p:z.infer<typeof bookingInput>){
 export async function POST(req:Request){try{
  sameOrigin(req);
  const u=await profile();
+ await enforceLimit(env.USER_WRITE_RATE_LIMITER,u.id);
  const input=z.object({
   action:z.enum(['saveVenue','favorite','book','bookingStatus','review','profile','feedback','venueStatus','userRole','moderateReview','reviewReply','feedbackStatus']),
   surface:z.enum(['admin','partner','tourist']).optional(),data:z.unknown()
- }).parse(JSON.parse(new TextDecoder().decode(await boundedBody(req,200000))));
+ }).parse(await jsonBody(req,200000));
  await seed();const now=new Date().toISOString();let result:unknown=null;
  if(input.surface==='admin'&&u.role!=='admin'||input.surface==='partner'&&u.role==='tourist')throw new AppError('forbidden',403);
 
@@ -164,6 +167,8 @@ export async function POST(req:Request){try{
       payload:{...rows[0].payload,reply:p.reply,updatedAt:now}}));
 
  }else throw new AppError('invalid_action');
+ if(['userRole','venueStatus','moderateReview','feedbackStatus','bookingStatus','saveVenue'].includes(input.action))
+   console.info(JSON.stringify({event:'security_action',action:input.action,actorId:u.id}));
  return Response.json({state:await state(input.surface),result},{headers:{'Cache-Control':'no-store'}});
 }catch(e){if(e instanceof z.ZodError||e instanceof SyntaxError||e instanceof RangeError)
  return Response.json({error:'invalid_input'},{status:400});return handleError(e)}}

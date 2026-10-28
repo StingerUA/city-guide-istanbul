@@ -26,7 +26,7 @@ export async function GET(req:Request){
  const valid=!!verifier&&!!state&&!!flow&&state===flow&&
    /^[a-zA-Z0-9_-]{43,128}$/.test(verifier);
  const errorResponse=(reason:string)=>clearFlow(
-   NextResponse.redirect(new URL('/signin?oauth_error='+reason, url.origin),{headers:noStore}));
+   NextResponse.redirect(new URL('/signin?oauth_error='+reason+'&return_to='+encodeURIComponent(next), url.origin),{headers:noStore}));
 
  if(!valid)return errorResponse('invalid_flow');
  if(url.searchParams.has('error'))return errorResponse('denied');
@@ -49,7 +49,7 @@ export async function GET(req:Request){
     !tokens.user?.email||!tokens.user?.email_confirmed_at)return errorResponse('unverified');
 
   const response=clearFlow(NextResponse.redirect(new URL(next,url.origin),{headers:noStore}));
-  const options={httpOnly:true,secure:process.env.NODE_ENV==='production',
+  const options={httpOnly:true,secure:true,
     sameSite:'lax' as const,path:'/'};
   response.cookies.set(AUTH_COOKIE,tokens.access_token,{
    ...options,maxAge:Math.min(Math.max(tokens.expires_in||3600,60),3600)

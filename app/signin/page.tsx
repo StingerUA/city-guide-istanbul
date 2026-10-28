@@ -49,7 +49,7 @@ const translations:Record<Lang,Copy>={
       signup_failed:'Hesap oluşturulamadı. Bilgilerinizi kontrol edin.',
       email_not_verified:'Önce e-posta adresinizi doğrulayın.',
       forbidden:'Bu işleme izin verilmiyor.',
-      invalid_input:'Girilen bilgileri kontrol edin.'
+      invalid_input:'Girilen bilgileri kontrol edin.',weak_password:'En az 15 karakterli bir şifre kullanın.',rate_limited:'Çok fazla deneme. Bir dakika sonra tekrar deneyin.'
     }
   },
   ru:{
@@ -79,7 +79,7 @@ const translations:Record<Lang,Copy>={
       signup_failed:'Не удалось зарегистрироваться. Проверьте введённые данные.',
       email_not_verified:'Сначала подтвердите адрес электронной почты.',
       forbidden:'Действие запрещено.',
-      invalid_input:'Проверьте введённые данные.'
+      invalid_input:'Проверьте введённые данные.',weak_password:'Используйте пароль длиной не менее 15 символов.',rate_limited:'Слишком много попыток. Попробуйте через минуту.'
     }
   },
   en:{
@@ -109,7 +109,7 @@ const translations:Record<Lang,Copy>={
       signup_failed:'Your account could not be created. Check your details.',
       email_not_verified:'Please verify your email address first.',
       forbidden:'This action is not allowed.',
-      invalid_input:'Please check the information you entered.'
+      invalid_input:'Please check the information you entered.',weak_password:'Use a password of at least 15 characters.',rate_limited:'Too many attempts. Try again in one minute.'
     }
   }
 };
@@ -188,7 +188,7 @@ export default function SigninPage(){
           <input name="email" type="email" autoComplete="email" required style={inputStyle}/>
         </label>
         <label>{t.password}
-          <input name="password" type="password" minLength={8} required
+          <input name="password" type="password" minLength={signup?15:8} maxLength={128} required
             autoComplete={signup?'new-password':'current-password'} style={inputStyle}/>
         </label>
         {errorCode&&<p role="alert" style={{color:'#a20b40'}}>

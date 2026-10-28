@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "city-guide-istanbul",
-  "main": "vinext/server/app-router-entry",
+  "main": "worker.ts",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": [
     "nodejs_compat"
@@ -10,10 +10,70 @@
     "not_found_handling": "none"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "redact_query_string": true
   },
   "vars": {
     "SUPABASE_URL": "https://qfohfbuwnpjcbhmyosaf.supabase.co",
-    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_C7LQEZnCjkbSpieihYUz4Q_cZRpII5k"
-  }
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_C7LQEZnCjkbSpieihYUz4Q_cZRpII5k",
+    "APP_ORIGINS": "https://city-guide-istanbul.nncdecdgc.workers.dev"
+  },
+  "ratelimits": [
+    {
+      "name": "AUTH_RATE_LIMITER",
+      "namespace_id": "6102801",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "AUTH_ACCOUNT_RATE_LIMITER",
+      "namespace_id": "6102802",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    },
+    {
+      "name": "READ_RATE_LIMITER",
+      "namespace_id": "6102803",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    },
+    {
+      "name": "WRITE_RATE_LIMITER",
+      "namespace_id": "6102804",
+      "simple": {
+        "limit": 60,
+        "period": 60
+      }
+    },
+    {
+      "name": "UPLOAD_RATE_LIMITER",
+      "namespace_id": "6102805",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    },
+    {
+      "name": "USER_WRITE_RATE_LIMITER",
+      "namespace_id": "6102806",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "MFA_RATE_LIMITER",
+      "namespace_id": "6102807",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    }
+  ]
 }
