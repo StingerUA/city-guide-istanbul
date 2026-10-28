@@ -18,7 +18,9 @@ const venue={id:'public-venue',ownerId:uid.partner,name:'Test venue',category:'r
 const model=await readFile('lib/model.ts','utf8');
 venue.category=model.match(/export const categories\s*=\s*\[\s*['"]([^'"]+)/)?.[1]||'restaurants';
 const tables={cg_users:profiles,cg_meta:[{key:'seed_v1'}],cg_venues:[{id:venue.id,owner_id:uid.partner,status:'published',version:1,payload:venue},{id:'private-venue',owner_id:uid.other,status:'draft',version:1,payload:{...venue,id:'private-venue',ownerId:uid.other,status:'draft'}}],cg_bookings:[{id:bookingId,user_id:uid.other,venue_id:venue.id,status:'confirmed',payload:{id:bookingId,userId:uid.other,venueId:venue.id,status:'confirmed'}}],cg_favorites:[],cg_reviews:[{id:reviewId,user_id:uid.other,venue_id:venue.id,status:'published',version:1,payload:{id:reviewId,userId:uid.other,bookingId,venueId:venue.id,author:'Guest',text:'Test',rating:5}}],cg_feedback:[],cg_uploads:[{id:uploadId,user_id:uid.other,key:'photos/'+uploadId,content_type:'image/png'}]};
-let providerCalls=0,revoked=false,failContext=false,enrolled=false,denyLogin=false,ip=0;
+let providerCalls=0,revoked=false,failContext=false,denyLogin=false,failUnenroll=false,ip=0;
+const factors={tourist:null,other:null,partner:null,admin:null};
+const account=token=>token.replace(/-weak$/,'');
 function identity(token){const base=token.replace(/-weak$/,'');return profiles.find(p=>p.id===uid[base])}
 function matches(row,search){for(const [key,value]of search){
  if(['select','limit','order','on_conflict'].includes(key))continue;
@@ -32,16 +34,17 @@ const outbound=async req=>{
  const u=new URL(req.url);if(u.hostname!=='qfohfbuwnpjcbhmyosaf.supabase.co')return new Response('Unexpected upstream',{status:502});
  providerCalls++;
  const token=(req.headers.get('authorization')||'').replace('Bearer ','');const who=identity(token);
- if(u.pathname==='/auth/v1/user')return who?Response.json({id:who.id,email:who.email,email_confirmed_at:'2026-01-01',user_metadata:{role:'admin',name:'Verified user'},factors:token==='admin-weak'&&!enrolled?[]:[{id:factorId,factor_type:'totp',status:enrolled?'unverified':'verified'}]}):Response.json({error:'bad_token'},{status:401});
- if(u.pathname==='/rest/v1/rpc/cg_session_context')return failContext?new Response('',{status:503}):Response.json({active:!!who&&!revoked,requires_mfa:who?.id===uid.admin||who?.id===uid.partner,aal:token.endsWith('-weak')?'aal1':'aal2'});
+ if(u.pathname==='/auth/v1/user')return who?Response.json({id:who.id,email:who.email,email_confirmed_at:'2026-01-01',user_metadata:{role:'admin',name:'Verified user'},factors:factors[account(token)]?[{id:factorId,factor_type:'totp',status:factors[account(token)]}]:[]}):Response.json({error:'bad_token'},{status:401});
+ if(u.pathname==='/rest/v1/rpc/cg_session_context')return failContext?new Response('',{status:503}):Response.json({active:!!who&&!revoked,requires_mfa:factors[account(token)]==='verified',aal:token.endsWith('-weak')||factors[account(token)]!=='verified'?'aal1':'aal2'});
  if(u.pathname==='/auth/v1/token'||u.pathname==='/auth/v1/signup'){
   if(denyLogin)return Response.json({error:'credentials'},{status:400});
   return Response.json({access_token:'tourist',refresh_token:'refresh-fixture',expires_in:3600,user:{email_confirmed_at:'2026-01-01'}});
  }
- if(u.pathname==='/auth/v1/logout'){revoked=true;return new Response(null,{status:204})}
- if(u.pathname==='/auth/v1/factors'&&req.method==='POST'){enrolled=true;return Response.json({id:factorId,totp:{qr_code:'<svg/>',secret:'FIXTUREONLY'}})}
+ if(u.pathname==='/auth/v1/logout'){if(u.searchParams.get('scope')!=='local')revoked=true;return new Response(null,{status:204})}
+ if(u.pathname==='/auth/v1/factors'&&req.method==='POST'){factors[account(token)]='unverified';return Response.json({id:factorId,totp:{qr_code:'<svg/>',secret:'FIXTUREONLY'}})}
  if(u.pathname===`/auth/v1/factors/${factorId}/challenge`)return Response.json({id:'challenge-fixture'});
- if(u.pathname===`/auth/v1/factors/${factorId}/verify`){const d=await req.json();return d.code==='123456'?Response.json({access_token:'admin',refresh_token:'new-refresh-fixture',expires_in:3600}):Response.json({error:'wrong_code'},{status:400})}
+ if(u.pathname===`/auth/v1/factors/${factorId}/verify`){const d=await req.json();if(d.code!=='123456')return Response.json({error:'wrong_code'},{status:400});factors[account(token)]='verified';return Response.json({access_token:account(token),refresh_token:'new-refresh-fixture',expires_in:3600})}
+ if(u.pathname===`/auth/v1/factors/${factorId}`&&req.method==='DELETE'){if(failUnenroll)return Response.json({error:'provider_failure'},{status:400});if(factors[account(token)]==='verified'&&token.endsWith('-weak'))return Response.json({error:'aal2_required'},{status:403});factors[account(token)]=null;return new Response(null,{status:204})}
  if(u.pathname.startsWith('/rest/v1/')){
   const name=u.pathname.split('/').at(-1),data=tables[name];if(!data)return Response.json({error:'unknown_table'},{status:400});
   if(req.method==='GET')return Response.json(data.filter(row=>matches(row,u.searchParams)));
@@ -75,8 +78,12 @@ try{
  await check('invalid token fails closed',()=>status('/api/state','invalid',undefined,401));
  await check('revoked session fails closed',async()=>{revoked=true;await status('/api/state','tourist',undefined,401);revoked=false});
  await check('session verification outage fails closed',async()=>{failContext=true;await status('/api/state','tourist',undefined,401);failContext=false});
- for(const who of ['admin-weak','partner-weak'])await check('staff MFA required '+who,()=>status('/api/state',who,undefined,403));
- await check('staff page redirects to MFA',async()=>{const r=await request('/admin','admin-weak');assert.equal(r.status,307);assert.match(r.headers.get('location'),/security/)});
+ for(const who of ['admin','partner'])await check('MFA off by default for '+who,()=>status('/api/state?surface='+who,who+'-weak',undefined,200));
+ await check('admin page accepts password session before opt-in',()=>status('/admin','admin-weak',undefined,200));
+ await check('settings show MFA disabled before opt-in',async()=>{const r=await status('/api/auth/mfa','admin-weak',undefined,200);assert.equal((await r.json()).enabled,false)});
+ factors.admin='verified';factors.partner='verified';
+ for(const who of ['admin-weak','partner-weak'])await check('opted-in MFA required '+who,()=>status('/api/state',who,undefined,403));
+ await check('opted-in account redirects to MFA',async()=>{const r=await request('/admin','admin-weak');assert.equal(r.status,307);assert.match(r.headers.get('location'),/security/)});
  await check('tourist cannot access admin state',()=>status('/api/state?surface=admin','tourist',undefined,403));
  await check('tourist cannot access partner state',()=>status('/api/state?surface=partner','tourist',undefined,403));
  await check('tourist state isolates bookings and strips review identifiers',async()=>{const r=await status('/api/state?surface=tourist','tourist',undefined,200),d=await r.json();assert.equal(d.user.role,'tourist');assert.equal(d.bookings.length,0);assert.equal(d.users,undefined);assert.ok(!d.venues.some(v=>v.status==='draft'));if(d.reviews.length){assert.equal(d.reviews[0].bookingId,'');assert.equal(d.reviews[0].userId,'')}});
@@ -97,12 +104,20 @@ try{
  await check('OAuth uses PKCE and no-store',async()=>{const r=await request('/api/auth/google?return_to=https://attacker.invalid');assert.equal(r.status,307);assert.match(r.headers.get('location'),/code_challenge=/);assert.match(r.headers.get('location'),/code_challenge_method=s256/);assert.match(r.headers.get('cache-control'),/no-store/)});
  await check('OAuth invalid flow fails before token exchange',async()=>{const before=providerCalls,r=await request('/api/auth/google/callback?flow=wrong&code=fake');assert.match(r.headers.get('location'),/invalid_flow/);assert.equal(providerCalls,before)});
  await check('cross-site refresh denied',()=>status('/api/auth/refresh','tourist',undefined,403,{headers:{'Sec-Fetch-Site':'cross-site'}}));
- await check('MFA enroll reachable at AAL1',async()=>{const r=await status('/api/auth/mfa','admin-weak',{action:'enroll'},200);assert.equal((await r.json()).id,factorId);assert.match(r.headers.get('cache-control'),/no-store/)});
- await check('MFA cannot verify another factor',()=>status('/api/auth/mfa','admin-weak',{action:'verify',factorId:uploadId,code:'123456'},403));
- await check('MFA wrong code rejected',()=>status('/api/auth/mfa','admin-weak',{action:'verify',factorId,code:'000000'},400));
- await check('MFA verification rotates secure session cookies',async()=>{const r=await status('/api/auth/mfa','admin-weak',{action:'verify',factorId,code:'123456',returnTo:'/admin'},200);assert.equal((await r.json()).next,'/admin');assert.ok(r.headers.getSetCookie().some(c=>c.startsWith('__Host-cg_access_token=admin')))});
- enrolled=false;
+ await check('MFA enroll reachable at AAL1',async()=>{const r=await status('/api/auth/mfa','tourist-weak',{action:'enroll'},200);assert.equal((await r.json()).id,factorId);assert.match(r.headers.get('cache-control'),/no-store/)});
+ await check('MFA cannot verify another factor',()=>status('/api/auth/mfa','tourist-weak',{action:'verify',factorId:uploadId,code:'123456'},403));
+ await check('MFA wrong code rejected',()=>status('/api/auth/mfa','tourist-weak',{action:'verify',factorId,code:'000000'},400));
+ await check('MFA verification rotates secure session cookies',async()=>{const r=await status('/api/auth/mfa','tourist-weak',{action:'verify',factorId,code:'123456',returnTo:'/admin'},200);assert.equal((await r.json()).next,'/admin');assert.ok(r.headers.getSetCookie().some(c=>c.startsWith('__Host-cg_access_token=tourist')))});
+ await check('MFA is enabled only after code verification',async()=>{const r=await status('/api/auth/mfa','tourist',undefined,200);assert.equal((await r.json()).enabled,true)});
  await check('password session cannot replace a verified factor',()=>status('/api/auth/mfa','partner-weak',{action:'enroll'},409));
+ await check('disable requires a code',()=>status('/api/auth/mfa','admin',{action:'disable',factorId},400));
+ await check('cannot disable another factor',()=>status('/api/auth/mfa','partner',{action:'disable',factorId:uploadId,code:'123456'},403));
+ await check('wrong disable code preserves MFA',async()=>{await status('/api/auth/mfa','partner',{action:'disable',factorId,code:'000000'},400);assert.equal(factors.partner,'verified')});
+ await check('disable verifies fresh code, unenrolls and clears cookies',async()=>{const r=await status('/api/auth/mfa','partner-weak',{action:'disable',factorId,code:'123456',returnTo:'/partner#settings'},200);assert.equal(factors.partner,null);assert.equal((await r.json()).next,'/signin?return_to=%2Fpartner%23settings');assert.match(r.headers.get('set-cookie'),/Max-Age=0/i)});
+ await check('partner password session works after voluntary disable',()=>status('/api/state?surface=partner','partner-weak',undefined,200));
+ await check('unenrollment failure preserves the enabled factor',async()=>{failUnenroll=true;await status('/api/auth/mfa','tourist',{action:'disable',factorId,code:'123456'},400);assert.equal(factors.tourist,'verified');failUnenroll=false});
+ await check('voluntary disable can be retried safely',async()=>{await status('/api/auth/mfa','tourist',{action:'disable',factorId,code:'123456'},200);assert.equal(factors.tourist,null)});
+ await check('unverified setup does not force MFA',async()=>{await status('/api/auth/mfa','other-weak',{action:'enroll'},200);const r=await status('/api/auth/mfa','other-weak',undefined,200);assert.equal((await r.json()).enabled,false);await status('/api/state','other-weak',undefined,200)});
  await check('account login throttle applies across IPs',async()=>{denyLogin=true;let r;for(let i=0;i<12;i++)r=await request('/api/auth/session',undefined,{action:'signin',email:'throttle@example.invalid',password:'fixture-password'});assert.equal(r.status,429);assert.equal(r.headers.get('retry-after'),'60');denyLogin=false});
  await check('IP throttle returns 429',async()=>{let r;for(let i=0;i<35;i++)r=await request('/api/auth/google',undefined,undefined,{headers:{'cf-connecting-ip':'198.51.100.9'}});assert.equal(r.status,429)});
  await check('logout revokes provider and clears cookies',async()=>{const r=await status('/api/auth/session','tourist',{action:'signout'},200);assert.equal((await r.json()).revoked,true);assert.equal(revoked,true);assert.match(r.headers.get('set-cookie'),/Max-Age=0/i)});
