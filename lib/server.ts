@@ -2,12 +2,15 @@ import {getSupabaseUser} from '@/lib/supabase/auth';
 import {list,insertIgnore,DataError} from '@/lib/supabase/data';
 import {accountRole} from './access-policy';
 import {demoVenues,isCategoryEnabled,type Venue,type Profile,type AppState,type Surface,type Feedback,type Review,type Booking} from './model';
+import {AppError} from './errors';
+export {AppError} from './errors';
+export {boundedBody,sameOrigin} from './http-security';
 
-export class AppError extends Error { constructor(public code:string,public status=400){super(code)} }
 type JsonRow={payload:unknown;version?:number;status?:string;id?:string;user_id?:string;venue_id?:string;created_at?:string;kind?:string};
 export async function actor(){const u=await getSupabaseUser();if(!u)throw new AppError('signin_required',401);return u}
 export async function profile():Promise<Profile>{
  const user=await actor();
+ if(user.requiresMfa&&user.aal!=='aal2')throw new AppError('mfa_required',403);
  let rows=await list<{id:string;email:string;role:'partner'|'tourist';payload:Profile}>(
    'cg_users',{id:'eq.'+user.userId});
  if(!rows.length){
@@ -59,15 +62,6 @@ export async function checkVenueMedia(u:Profile,v:{image:string;gallery:string[]
     throw new AppError('forbidden',403);
  }
 }
-export async function boundedBody(req:Request,limit:number,error='invalid_input'){
- if(Number(req.headers.get('content-length')||0)>limit)throw new AppError(error,413);
- const reader=req.body?.getReader();if(!reader)return new Uint8Array(0);
- const chunks:Uint8Array[]=[];let size=0;
- try{while(true){const item=await reader.read();if(item.done)break;size+=item.value.byteLength;
-  if(size>limit){await reader.cancel();throw new AppError(error,413)}chunks.push(item.value);
- }}finally{reader.releaseLock()}
- const result=new Uint8Array(size);let offset=0;for(const chunk of chunks){result.set(chunk,offset);offset+=chunk.byteLength}return result;
-}
 export async function state(surface?:Surface):Promise<AppState>{
  const u=await profile();await seed();
  if(surface==='admin'&&u.role!=='admin')throw new AppError('forbidden',403);
@@ -110,9 +104,8 @@ export async function state(surface?:Surface):Promise<AppState>{
    mode:'live',revision:new Date().toISOString()};
 }
 export function handleError(e:unknown){
- console.error(e instanceof AppError||e instanceof DataError?e.code:e);
+ console.error(JSON.stringify({event:'api_error',code:e instanceof AppError||e instanceof DataError?e.code:'internal_error'}));
  if(e instanceof AppError)return Response.json({error:e.code},{status:e.status});
  if(e instanceof DataError)return Response.json({error:e.code},{status:e.status});
  return Response.json({error:'storage_unavailable'},{status:503});
 }
-export function sameOrigin(req:Request){const origin=req.headers.get('origin');if(origin&&origin!==new URL(req.url).origin)throw new AppError('forbidden',403)}

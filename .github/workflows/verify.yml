@@ -3,12 +3,20 @@ on:
   pull_request:
   push:
     branches: [main, feat/cloudflare-supabase-runtime-20261012]
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
       - name: Activate pnpm
@@ -16,8 +24,10 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.25.0 --activate
       - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=low
       - run: pnpm exec tsc --noEmit
       - run: pnpm run build
+      - run: pnpm test:security
 
       - name: Smoke-test standalone Worker sign-in route
         shell: bash

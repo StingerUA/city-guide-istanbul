@@ -1,0 +1,63 @@
+-- Transactional security regression: all synthetic identities are rolled back.
+begin;
+do $test$
+declare
+ a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); sid uuid:=gen_random_uuid(); fid uuid:=gen_random_uuid(); c jsonb; n int:=0; visible int;
+begin
+ insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data)
+ values(a,'security-a-'||a||'@example.invalid',now(),'{"role":"admin"}'),(b,'security-b-'||b||'@example.invalid',now(),'{}');
+ insert into auth.sessions(id,user_id,aal) values(sid,a,'aal1');
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated','session_id',sid,'aal','aal1')::text,true);
+ set local role authenticated;
+ c:=public.cg_session_context();
+ assert c->>'active'='true' and c->>'requires_mfa'='false','tourist live session / user_metadata cannot grant staff'; n:=n+1;
+ select count(*) into visible from public.cg_users;
+ assert visible=1,'RLS must show only own profile';n:=n+1;
+ assert not has_table_privilege('authenticated','public.cg_users','UPDATE'),'direct role writes denied';n:=n+1;
+ assert not has_function_privilege('authenticated','public.cg_book_atomic(jsonb,uuid,integer)','EXECUTE'),'privileged booking RPC denied';n:=n+1;
+ assert not has_table_privilege('anon','public.cg_users','SELECT'),'anonymous profiles denied';n:=n+1;
+ assert not has_function_privilege('anon','public.cg_session_context()','EXECUTE'),'anonymous session RPC denied';n:=n+1;
+ reset role;
+ update public.cg_users set role='partner' where id=a;
+ set local role authenticated;
+ c:=public.cg_session_context();assert c->>'requires_mfa'='true' and c->>'aal'='aal1','partner requires MFA';n:=n+1;
+ select count(*) into visible from public.cg_users;assert visible=0,'RLS blocks staff AAL1';n:=n+1;
+ reset role;
+ -- A forged AAL2 claim without a verified factor cannot grant access.
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated','session_id',sid,'aal','aal2')::text,true);
+ set local role authenticated;
+ assert (public.cg_session_context()->>'aal')='aal1','no-factor AAL2 rejected';n:=n+1;
+ reset role;
+ insert into auth.mfa_factors(id,user_id,factor_type,status,created_at,updated_at) values(fid,a,'totp','verified',now(),now());
+ set local role authenticated;
+ assert (public.cg_session_context()->>'aal')='aal1','session downgrade cannot be bypassed by old JWT';n:=n+1;
+ reset role;
+ update auth.sessions set aal='aal2' where id=sid;
+ set local role authenticated;
+ assert (public.cg_session_context()->>'aal')='aal2','verified MFA session accepted';n:=n+1;
+ select count(*) into visible from public.cg_users;assert visible=1,'MFA grants only own row';n:=n+1;
+ reset role;
+ update auth.users set banned_until=now()+interval '1 hour' where id=a;
+ assert (private.cg_session_context()->>'active')='false','banned user denied';n:=n+1;
+ update auth.users set banned_until=null,deleted_at=now() where id=a;
+ assert (private.cg_session_context()->>'active')='false','deleted user denied';n:=n+1;
+ update auth.users set deleted_at=null,email_confirmed_at=null where id=a;
+ assert (private.cg_session_context()->>'active')='false','unverified email denied';n:=n+1;
+ update auth.users set email_confirmed_at=now() where id=a;
+ update auth.sessions set not_after=now()-interval '1 second' where id=sid;
+ assert (private.cg_session_context()->>'active')='false','expired session denied';n:=n+1;
+ update auth.sessions set not_after=null,user_id=b where id=sid;
+ assert (private.cg_session_context()->>'active')='false','session of another user denied';n:=n+1;
+ update auth.sessions set user_id=a where id=sid;
+ delete from auth.sessions where id=sid;
+ set local role authenticated;
+ assert (public.cg_session_context()->>'active')='false','revocation is immediate';n:=n+1;
+ select count(*) into visible from public.cg_users;assert visible=0,'RLS blocks revoked session';n:=n+1;
+ reset role;
+ perform set_config('request.jwt.claims','{}',true);
+ assert (private.cg_session_context()->>'active')='false','missing identity denied';n:=n+1;
+ perform set_config('city_guide.security_checks',n::text,true);
+end;
+$test$;
+select current_setting('city_guide.security_checks')::int as passed_checks, 'all fixtures rolled back' as cleanup;
+rollback;
