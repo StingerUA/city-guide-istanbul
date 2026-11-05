@@ -5,6 +5,7 @@ import type {Profile} from './model';
 const adminEmails = new Set([
   'nncdecdgc@gmail.com',
   'sayitatas@hotmail.com',
+  'sayitatas@gmail.com',
 ]);
 
 export function isAdminEmail(email:string):boolean {
