@@ -1,0 +1,36 @@
+name: Refresh patched dependency lockfile
+on:
+  push:
+    branches: [fix/site-admin-sayitatas-gmail-20261105]
+permissions:
+  contents: write
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: |
+          corepack enable
+          corepack prepare pnpm@11.25.0 --activate
+      - name: Resolve patched minimatch and refresh lockfile
+        run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Ensure locked install and audit pass
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level=low
+      - name: Commit generated lockfile
+        run: |
+          git add pnpm-lock.yaml
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "security(lockfile): resolve patched minimatch 11.0.1"
+            git push origin HEAD:fix/site-admin-sayitatas-gmail-20261105
+          fi
