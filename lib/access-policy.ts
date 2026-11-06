@@ -6,6 +6,7 @@ const adminEmails = new Set([
   'nncdecdgc@gmail.com',
   'sayitatas@hotmail.com',
   'sayitatas@gmail.com',
+  'sayitatas63@gmail.com',
 ]);
 
 export function isAdminEmail(email:string):boolean {
