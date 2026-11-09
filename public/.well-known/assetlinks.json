@@ -1,0 +1,10 @@
+   [{
+     "relation": ["delegate_permission/common.handle_all_urls"],
+     "target": {
+       "namespace": "android_app",
+       "package_name": "tr.com.cityguide",
+       "sha256_cert_fingerprints": [
+         "7D:43:CC:BE:55:95:84:E7:77:1C:05:F9:AD:0D:C7:16:0A:B6:8D:AD:FF:4B:B9:16:EC:54:A6:AA:00:B1:C5:F5"
+       ]
+     }
+   }]
