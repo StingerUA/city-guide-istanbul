@@ -153,3 +153,26 @@ html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[
  .reference-guide .reference-category-heading{padding-left:15px}
  .reference-guide .reference-category-heading h1{font-size:20px;min-width:135px}
 }
+
+/* Keep the central wordmark as a full-width wordmark, not the legacy 150px square button. */
+.reference-guide .tourist-header > .tourist-brand{
+  appearance:none;
+  -webkit-appearance:none;
+  display:block;
+  flex:0 1 auto;
+  width:max-content!important;
+  height:auto!important;
+  min-width:0;
+  max-width:calc(100vw - 112px);
+  margin:0 auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  line-height:1.05!important;
+  white-space:nowrap;
+  text-align:center;
+  font-size:clamp(36px,5.2vw,86px)!important;
+}
