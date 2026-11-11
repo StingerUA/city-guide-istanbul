@@ -169,7 +169,7 @@ export default function SigninPage(){
   return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24,background:'#f9f7fa'}}>
     <section lang={lang} style={{background:'white',borderRadius:20,padding:28,width:'100%',maxWidth:400,boxShadow:'0 6px 30px #00000012'}}>
       <header style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:20,flexWrap:'wrap'}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}><img src="/images/city-guide-logo.webp" alt="City Guide logo" width={64} height={64} style={{display:'block',width:64,height:64,objectFit:'contain',borderRadius:10,flexShrink:0}}/><h1 style={{fontSize:25,fontWeight:700,margin:0,whiteSpace:'nowrap'}}>City Guide</h1></div>
+        <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}><img src="/images/city-guide-logo.webp" alt="City Guide logo" width={64} height={64} style={{display:'block',width:64,height:64,objectFit:'contain',objectPosition:'center',flexShrink:0}}/><h1 style={{fontSize:25,fontWeight:700,margin:0,whiteSpace:'nowrap'}}>City Guide</h1></div>
         <label htmlFor="signin-language" style={{fontSize:12,color:'#555',display:'grid',gap:4}}>
           {t.language}
           <select id="signin-language" aria-label={t.language} value={lang}
