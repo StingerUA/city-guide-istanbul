@@ -72,7 +72,7 @@ html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[
 .reference-guide .reference-navigation>button>svg,.reference-guide .reference-navigation>a>svg{width:38px;height:38px;opacity:.85}
 .reference-guide .reference-navigation>button.active>svg{opacity:1}
 .reference-guide .reference-navigation>.reference-home-pin{height:68px;width:68px;justify-self:center;align-self:start;margin-top:-27px;padding:0;border:5px solid #fff;border-radius:50%;box-shadow:0 3px 5px #0002;background:linear-gradient(150deg,var(--cg-deep),var(--cg-pale))}
-.reference-guide .reference-navigation>.reference-home-pin>svg{width:50px;height:50px;opacity:1}
+.reference-guide .reference-navigation>.reference-home-pin>img{display:block;width:50px;height:50px;object-fit:contain;opacity:1}
 .reference-guide .reference-account-links{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
 .reference-guide .reference-appearance{margin:0 0 23px}
 .reference-guide .reference-appearance h2{font-size:18px;margin-bottom:14px}
@@ -137,7 +137,7 @@ html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[
  .reference-guide .reference-navigation>button,.reference-guide .reference-navigation>a{height:60px;padding:9px 0}
  .reference-guide .reference-navigation>button>svg,.reference-guide .reference-navigation>a>svg{width:33px;height:33px}
  .reference-guide .reference-navigation>.reference-home-pin{width:65px;height:65px;margin-top:-25px;padding:0}
- .reference-guide .reference-navigation>.reference-home-pin>svg{width:47px;height:47px}
+ .reference-guide .reference-navigation>.reference-home-pin>img{width:47px;height:47px}
  .reference-guide .reference-account-links{gap:7px}
  .reference-guide .reference-account-links .button{padding:9px}
  .reference-guide .reference-appearance{padding:19px}
