@@ -40,7 +40,7 @@ export function securityHeaders(nonce?:string){
   return {
     'X-Content-Type-Options':'nosniff',
     'X-Frame-Options':'DENY',
-    'Referrer-Policy':'no-referrer',
+    'Referrer-Policy':'strict-origin-when-cross-origin',
     'Strict-Transport-Security':'max-age=31536000',
     'Permissions-Policy':'camera=(), microphone=(), geolocation=(self), payment=(), usb=()',
     'Cross-Origin-Opener-Policy':'same-origin',
