@@ -1,10 +1,11 @@
-   [{
-     "relation": ["delegate_permission/common.handle_all_urls"],
-     "target": {
-       "namespace": "android_app",
-       "package_name": "tr.com.cityguide",
-       "sha256_cert_fingerprints": [
-         "7D:43:CC:BE:55:95:84:E7:77:1C:05:F9:AD:0D:C7:16:0A:B6:8D:AD:FF:4B:B9:16:EC:54:A6:AA:00:B1:C5:F5"
-       ]
-     }
-   }]
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "tr.com.cityguide",
+    "sha256_cert_fingerprints": [
+      "45:50:F6:4D:8A:EA:9E:6B:74:21:2E:3E:D3:0C:EE:0E:BF:BA:5F:C0:C8:95:05:7A:39:28:40:BE:37:B1:E1:D5",
+      "7D:43:CC:BE:55:95:84:E7:77:1C:05:F9:AD:0D:C7:16:0A:B6:8D:AD:FF:4B:B9:16:EC:54:A6:AA:00:B1:C5:F5"
+    ]
+  }
+}]
