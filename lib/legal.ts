@@ -1,7 +1,7 @@
 // Единственное место, где нужно что-то поменять вручную: CONTACT_EMAIL.
 // Этот адрес показывается на страницах /privacy и /delete-account.
 export const OPERATOR = 'City Guide İstanbul';
-export const CONTACT_EMAIL = 'CONTACT_EMAIL_NOT_SET@example.com';
+export const CONTACT_EMAIL = 'nncdecdgc@gmail.com';
 export const POLICY_UPDATED = '2026-11-10';
 
 export type LegalLang = 'ru' | 'tr' | 'en';
