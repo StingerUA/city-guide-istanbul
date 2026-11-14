@@ -176,3 +176,6 @@ html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[
   text-align:center;
   font-size:clamp(36px,5.2vw,86px)!important;
 }
+
+/* Keep the white pin mark visible on every tourist header theme. */
+.reference-guide .tourist-corner-logo{background:#bb2a62;border-radius:50%;padding:6px;box-sizing:border-box;}
