@@ -244,11 +244,10 @@ function TouristHeader(){
 function TouristNavigation(){
  const{t,view,navigate,state,detail,city}=useGuide();
  const links:[string,'home'|'account'|'gift',string][]=[['home','home','home'],['settings','account','profile'],['campaigns','gift','campaigns']];
- const home=state.user?.homeAddress;
  return <nav className="tourist-navigation reference-navigation" aria-label={t('guide')}>
-  {links.map(([key,kind,label])=><button key={key} className={(key==='settings'?view==='assistant':view===key)?'active':''} aria-label={key==='settings'?'AI assistant':t(label)} title={key==='settings'?'AI assistant':t(label)} aria-current={(key==='settings'?view==='assistant':view===key)?'page':undefined} onClick={()=>navigate(key==='settings'?'assistant':key)}>{key==='settings'?<Sparkles size={23}/>:<NavigationArt kind={kind}/>}</button>)}
+  {links.map(([key,kind,label])=><button key={key} className={(key==='settings'?view==='settings':view===key)?'active':''} aria-label={t(label)} title={t(label)} aria-current={(key==='settings'?view==='settings':view===key)?'page':undefined} onClick={()=>navigate(key)}>{key==='settings'?<Sparkles size={23}/>:<NavigationArt kind={kind}/>}</button>)}
   <button aria-label={t('random')} title={t('random')} onClick={()=>{const places=state.venues.filter(v=>v.status==='published'&&(city==='all'||v.city===city));if(places.length)detail(places[Math.floor(Math.random()*places.length)]);else toast.info(t('noResults'))}}><NavigationArt kind="dice"/></button>
-  {home?<a className="reference-home-pin" aria-label={t('goHome')} title={t('goHome')} href={'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(home)} target="_blank" rel="noreferrer"><img src="/images/logo-pin.svg" alt="" aria-hidden="true"/></a>:<button className="reference-home-pin" aria-label={t('goHome')} title={t('goHome')} onClick={()=>{navigate('settings');toast.info(t('homeAddress'))}}><img src="/images/logo-pin.svg" alt="" aria-hidden="true"/></button>}
+  <button className="reference-home-pin" aria-label="AI assistant" title="AI assistant" aria-current={view==='assistant'?'page':undefined} onClick={()=>navigate('assistant')}><img src="/images/logo-pin.svg" alt="" aria-hidden="true"/></button>
  </nav>;
 }
 function MyTrips(){
