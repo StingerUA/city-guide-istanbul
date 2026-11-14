@@ -6,7 +6,7 @@ html[data-city-theme=green]{--cg-deep:#165344;--cg-mid:#477f6b;--cg-pale:#b4d4c4
 .reference-guide .tourist-header{height:150px;min-height:0;position:relative;display:flex;align-items:flex-start;justify-content:center;padding:20px 24px 0;border:0;border-radius:0 0 50% 50% / 0 0 22% 22%;background:linear-gradient(165deg,var(--cg-deep),var(--cg-pale));box-shadow:none;overflow:visible;z-index:1}
 .reference-guide.reference-home .tourist-header{height:260px;background:linear-gradient(140deg,#f14d90,var(--cg-pale));border-radius:0 0 50% 50% / 0 0 18% 18%}
 html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[data-city-theme=green] .reference-guide.reference-home .tourist-header{background:linear-gradient(140deg,var(--cg-deep),var(--cg-pale))}
-.reference-guide .tourist-brand{display:block;margin:0;padding:0;color:white!important;font-family:CityGuideScript,cursive!important;font-size:86px!important;font-weight:400!important;font-style:normal;letter-spacing:0!important;line-height:1.05;white-space:nowrap;text-shadow:none}.reference-guide .tourist-corner-logo{position:absolute;left:max(24px,calc((100% - 1060px)/2));top:12px;width:96px;height:96px;object-fit:contain;object-position:center;border:0;border-radius:0;padding:0;background:transparent;box-shadow:none;mix-blend-mode:normal}
+.reference-guide .tourist-brand{display:block;margin:0;padding:0;color:white!important;font-family:CityGuideScript,cursive!important;font-size:86px!important;font-weight:400!important;font-style:normal;letter-spacing:0!important;line-height:1.05;white-space:nowrap;text-shadow:none}.reference-guide .tourist-corner-logo{position:absolute;left:max(24px,calc((100% - 1060px)/2));top:16px;width:68px;height:68px;object-fit:contain;object-position:center;border:0;border-radius:0;padding:0;background:transparent;box-shadow:none;mix-blend-mode:normal}
 .reference-guide .reference-back{position:absolute;right:max(24px,calc((100% - 1060px)/2));left:auto;top:50px;width:44px;height:44px;display:grid;place-items:center;color:#fff;border-radius:50%}
 .reference-guide .reference-back svg{width:26px;height:26px}
 .reference-guide .tourist-content{position:relative;max-width:1060px;padding:0 28px 120px;margin:0 auto;z-index:2}
@@ -91,7 +91,7 @@ html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[
  .reference-guide .tourist-header{height:129px;padding:22px 18px 0;border-radius:0 0 50% 50% / 0 0 17% 17%}
  .reference-guide.reference-home .tourist-header{height:194px;padding-top:17px}
  .reference-guide .tourist-brand{font-size:73px!important}
- .reference-guide .tourist-corner-logo{left:16px;top:10px;width:66px;height:66px}
+ .reference-guide .tourist-corner-logo{left:16px;top:13px;width:48px;height:48px}
  .reference-guide .reference-back{right:16px;left:auto;top:44px;width:34px;height:34px}
  .reference-guide .reference-back svg{width:24px;height:24px}
  .reference-guide .tourist-content{padding:0 22px 104px;width:100%;max-width:100%}
@@ -177,5 +177,5 @@ html[data-city-theme=blue] .reference-guide.reference-home .tourist-header,html[
   font-size:clamp(36px,5.2vw,86px)!important;
 }
 
-/* Keep the white pin mark visible on every tourist header theme. */
-.reference-guide .tourist-corner-logo{background:#bb2a62;border-radius:50%;padding:6px;box-sizing:border-box;}
+/* Keep the logo itself transparent; do not add a colored badge behind it. */
+.reference-guide .tourist-corner-logo{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;box-sizing:content-box;}
