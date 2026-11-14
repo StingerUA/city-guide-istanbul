@@ -221,3 +221,7 @@
 .map-frame>.venue-geo-map{height:100%}
 .map-frame .venue-map-canvas{height:100%!important;border:0;border-radius:0}
 @media(max-width:600px){.venue-branch-fields,.venue-visitor-branches{grid-template-columns:1fr}.venue-gallery-main>img{height:205px}.venue-branch-editor{padding:11px}.venue-map-pin{width:28px;height:28px}}
+
+/* New white pin logo on a brand-color disc in the workspace sidebar. */
+.brand-corner-logo{background:#bb2a62;border-radius:50%;padding:7px;box-sizing:border-box;}
+.brand-corner-logo img{width:100%;height:100%;object-fit:contain;}
