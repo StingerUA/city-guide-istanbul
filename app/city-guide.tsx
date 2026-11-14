@@ -239,7 +239,7 @@ function AssistantPage(){
 }
 function TouristHeader(){
  const{navigate}=useGuide();
- return <header className="tourist-header"><img className="tourist-corner-logo" src="/images/logo-pin.svg" alt="City Guide logo" width={512} height={512}/><button className="tourist-brand" onClick={()=>navigate('home')} aria-label="City Guide">City Guide</button></header>;
+ return <header className="tourist-header"><img className="tourist-corner-logo" src="/images/logo-pin.svg" alt="City Guide logo" width={512} height={512}/><button className="tourist-brand" onClick={()=>navigate('home')} aria-label="City Guide"><img className="tourist-brand-image" src="/images/Code_Generated_Image%20(1).png" alt="City Guide" width={600} height={220}/></button></header>;
 }
 function TouristNavigation(){
  const{t,view,navigate,state,detail,city}=useGuide();
