@@ -1,5 +1,6 @@
 import {env} from 'cloudflare:workers';
-import {profile,AppError,handleError,jsonBody} from '@/lib/server';
+import {profile,AppError,handleError} from '@/lib/server';
+import {jsonBody} from '@/lib/http-security';
 import {dataRequest,insert,list} from '@/lib/supabase/data';
 
 const MONTHLY_LIMIT=4.50;
@@ -12,6 +13,17 @@ Speak the user's language (Russian, Turkish, or English) and adapt naturally. Gi
 Use the supplied City Guide catalogue as your source for listed venues. Never invent venue details, opening hours, prices, addresses, ratings, availability, or booking confirmations. Clearly distinguish catalogue facts from general suggestions. If the catalogue lacks data, say so and offer a practical next step. Do not claim to have checked live traffic, weather, maps, or reservations unless a tool result is explicitly supplied. Do not request sensitive personal data. For emergencies, direct users to local emergency services and avoid pretending to dispatch help.
 Current date: ${new Date().toISOString().slice(0,10)}. Current city context: Istanbul unless the user says otherwise.`;
 
+export async function GET(){
+ try{
+  const user=await profile();
+  const conversations=await list<{id:string}>('cg_ai_conversations',{user_id:'eq.'+user.id,order:'updated_at.desc',limit:'1'},'id');
+  if(!conversations.length)return Response.json({messages:[],conversationId:null},{headers:{'Cache-Control':'no-store'}});
+  const conversationId=conversations[0].id;
+  const messages=await list<{role:'user'|'assistant';content:string;created_at:string}>(
+   'cg_ai_messages',{conversation_id:'eq.'+conversationId,user_id:'eq.'+user.id,order:'created_at.asc',limit:'40'},'role,content,created_at');
+  return Response.json({messages,conversationId},{headers:{'Cache-Control':'no-store'}});
+ }catch(e){return handleError(e)}
+}
 export async function POST(req:Request){
  let monthKey='',reserved=false,conversationId:string|undefined;
  try{
@@ -48,7 +60,8 @@ export async function POST(req:Request){
    description:v.description?.[(body.lang==='tr'?'tr':body.lang==='en'?'en':'ru')]||v.description?.tr||v.description?.en,
    price:v.price,currency:v.currency,open:v.open,close:v.close,phone:v.phone,website:v.website
   }));
-  const contents=[...history.reverse().map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}))];
+  const prior=history.reverse();if(prior.at(-1)?.role==='user'&&prior.at(-1)?.content===message)prior.pop();
+  const contents=[...prior.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}))];
   const prompt=`Published City Guide catalogue (may be incomplete): ${JSON.stringify(catalogue).slice(0,6500)}\n\nUser's latest message: ${message}`;
   contents.push({role:'user',parts:[{text:prompt}]});
   const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODEL+':generateContent',{
