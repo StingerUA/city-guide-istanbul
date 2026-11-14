@@ -67,7 +67,7 @@ async function status(url,who,body,expected,extra){const r=await request(url,who
 const action=(action,data,who='tourist')=>request('/api/action',who,{action,data});
 try{
  await check('sign-in renders with fresh CSP nonce',async()=>{const a=await request('/signin'),b=await request('/signin');assert.equal(a.status,200);const csp=a.headers.get('content-security-policy');assert.match(csp,/nonce-/);assert.doesNotMatch(csp,/script-src[^;]*unsafe-inline/);assert.notEqual(csp,b.headers.get('content-security-policy'));const nonce=csp.match(/nonce-([^']+)/)[1],html=await a.text();for(const tag of html.matchAll(/<script\b[^>]*>/g))assert.ok(tag[0].includes(nonce));});
- for(const [name,value]of Object.entries({'x-frame-options':'DENY','x-content-type-options':'nosniff','referrer-policy':'no-referrer','cross-origin-resource-policy':'same-origin'}))await check('header '+name,async()=>assert.equal((await request('/signin')).headers.get(name),value));
+ for(const [name,value]of Object.entries({'x-frame-options':'DENY','x-content-type-options':'nosniff','referrer-policy':'strict-origin-when-cross-origin','cross-origin-resource-policy':'same-origin'}))await check('header '+name,async()=>assert.equal((await request('/signin')).headers.get(name),value));
  await check('errors are private and not cached',async()=>{const r=await request('/api/state');assert.equal(r.status,401);assert.match(r.headers.get('cache-control'),/no-store/)});
  for(const route of ['/api/action','/api/auth/session','/api/upload','/api/auth/mfa']){
   await check('reject missing Origin '+route,()=>status(route,'tourist',{},403,{headers:{Origin:''}}));
