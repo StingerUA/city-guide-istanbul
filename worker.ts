@@ -15,7 +15,11 @@ export default {
    if(url.pathname.startsWith('/api/')){
     const mutation=!['GET','HEAD','OPTIONS'].includes(request.method);
     if(mutation)sameOrigin(request);
-    if(url.pathname.startsWith('/api/auth/refresh')&&request.headers.get('sec-fetch-site')==='cross-site')
+    // Cross-site requests to refresh are blocked, except real top-level page navigations:
+    // the Android app (TWA) opens the site with an android-app:// initiator, which Chrome reports as cross-site.
+    const topLevelNavigation=request.method==='GET'&&request.headers.get('sec-fetch-mode')==='navigate'&&
+      request.headers.get('sec-fetch-dest')==='document';
+    if(url.pathname.startsWith('/api/auth/refresh')&&request.headers.get('sec-fetch-site')==='cross-site'&&!topLevelNavigation)
       throw new AppError('forbidden',403);
     const ip=request.headers.get('cf-connecting-ip')||'unknown';
     const kind=url.pathname.startsWith('/api/auth/')?'auth':url.pathname==='/api/upload'?'upload':mutation?'write':'read';
