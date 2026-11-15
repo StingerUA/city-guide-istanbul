@@ -82,10 +82,12 @@ export async function POST(req:Request){
   if(!answer)throw new AppError('ai_empty_response',503);
   const inputTokens=result.usageMetadata?.promptTokenCount||0,outputTokens=result.usageMetadata?.candidatesTokenCount||0;
   const actual=FREE_TIER?0:(inputTokens&&outputTokens?(inputTokens*0.30+outputTokens*2.50)/1_000_000:REQUEST_RESERVE);
-  await dataRequest('/rest/v1/rpc/cg_ai_settle','POST',{},{
-   p_month:monthKey,p_reserved:REQUEST_RESERVE,p_actual:actual
-  });
-  reserved=false;
+  if(!FREE_TIER){
+   await dataRequest('/rest/v1/rpc/cg_ai_settle','POST',{},{
+    p_month:monthKey,p_reserved:REQUEST_RESERVE,p_actual:actual
+   });
+   reserved=false;
+  }
   await insert('cg_ai_messages',[{conversation_id:conversationId,user_id:user.id,role:'assistant',content:answer,model:MODEL,input_tokens:inputTokens,output_tokens:outputTokens,cost_usd:actual}]);
   await dataRequest('/rest/v1/cg_ai_conversations','PATCH',{id:'eq.'+conversationId,user_id:'eq.'+user.id},{updated_at:new Date().toISOString()});
   const budget=await list<{spent_usd:number}>('cg_ai_budget',{month_key:'eq.'+monthKey},'spent_usd');
