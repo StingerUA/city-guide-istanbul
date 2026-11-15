@@ -36,11 +36,13 @@ export async function POST(req:Request){
   const apiKey=runtime.GEMINI_API_KEY;
   if(!apiKey)throw new AppError('ai_not_configured',503);
   monthKey=new Date().toISOString().slice(0,7);
-  const ok=await dataRequest<boolean>('/rest/v1/rpc/cg_ai_reserve','POST',{},{
-   p_month:monthKey,p_amount:REQUEST_RESERVE,p_limit:MONTHLY_LIMIT
-  });
-  if(!ok)throw new AppError('ai_monthly_budget_reached',429);
-  reserved=true;
+  if(!FREE_TIER){
+   const ok=await dataRequest<boolean>('/rest/v1/rpc/cg_ai_reserve','POST',{},{
+    p_month:monthKey,p_amount:REQUEST_RESERVE,p_limit:MONTHLY_LIMIT
+   });
+   if(!ok)throw new AppError('ai_monthly_budget_reached',429);
+   reserved=true;
+  }
 
   if(typeof body.conversationId==='string'&&/^[0-9a-f-]{36}$/i.test(body.conversationId)){
    const existing=await list<{id:string}>('cg_ai_conversations',{id:'eq.'+body.conversationId,user_id:'eq.'+user.id},'id');
