@@ -5,7 +5,8 @@ import {dataRequest,insert,list} from '@/lib/supabase/data';
 
 const MONTHLY_LIMIT=4.50;
 const REQUEST_RESERVE=0.01;
-const MODEL='gemini-2.5-flash';
+const MODEL='gemini-2.5-flash-lite';
+const FREE_TIER=true;
 type MessageRow={role:'user'|'assistant';content:string};
 type VenueRow={payload:{name?:string;city?:string;district?:string;category?:string;address?:string;description?:Record<string,string>;price?:number;currency?:string;open?:string;close?:string;phone?:string;website?:string};status:string;is_demo:boolean};
 const personality=`You are City Guide, an intelligent urban companion for visitors and residents. Your personality: observant, culturally curious, composed, warm but never clingy, practical, discreet, and intellectually engaging. You are not a generic chatbot or pushy salesperson.
@@ -35,11 +36,13 @@ export async function POST(req:Request){
   const apiKey=runtime.GEMINI_API_KEY;
   if(!apiKey)throw new AppError('ai_not_configured',503);
   monthKey=new Date().toISOString().slice(0,7);
-  const ok=await dataRequest<boolean>('/rest/v1/rpc/cg_ai_reserve','POST',{},{
-   p_month:monthKey,p_amount:REQUEST_RESERVE,p_limit:MONTHLY_LIMIT
-  });
-  if(!ok)throw new AppError('ai_monthly_budget_reached',429);
-  reserved=true;
+  if(!FREE_TIER){
+   const ok=await dataRequest<boolean>('/rest/v1/rpc/cg_ai_reserve','POST',{},{
+    p_month:monthKey,p_amount:REQUEST_RESERVE,p_limit:MONTHLY_LIMIT
+   });
+   if(!ok)throw new AppError('ai_monthly_budget_reached',429);
+   reserved=true;
+  }
 
   if(typeof body.conversationId==='string'&&/^[0-9a-f-]{36}$/i.test(body.conversationId)){
    const existing=await list<{id:string}>('cg_ai_conversations',{id:'eq.'+body.conversationId,user_id:'eq.'+user.id},'id');
@@ -78,7 +81,7 @@ export async function POST(req:Request){
   const answer=result.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim();
   if(!answer)throw new AppError('ai_empty_response',503);
   const inputTokens=result.usageMetadata?.promptTokenCount||0,outputTokens=result.usageMetadata?.candidatesTokenCount||0;
-  const actual=inputTokens&&outputTokens?(inputTokens*0.30+outputTokens*2.50)/1_000_000:REQUEST_RESERVE;
+  const actual=FREE_TIER?0:(inputTokens&&outputTokens?(inputTokens*0.30+outputTokens*2.50)/1_000_000:REQUEST_RESERVE);
   await dataRequest('/rest/v1/rpc/cg_ai_settle','POST',{},{
    p_month:monthKey,p_reserved:REQUEST_RESERVE,p_actual:actual
   });
