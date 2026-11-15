@@ -76,7 +76,15 @@ export async function POST(req:Request){
    }),
    signal:AbortSignal.timeout(25000)
   });
-  if(!response.ok)throw new AppError(response.status===429?'ai_provider_busy':'ai_provider_error',503);
+  if(!response.ok){
+   let providerError:{error?:{code?:number;status?:string;message?:string}}={};
+   try{providerError=await response.json() as typeof providerError}catch{}
+   console.error(JSON.stringify({event:'gemini_provider_error',httpStatus:response.status,
+    providerStatus:providerError.error?.status||'unknown',
+    providerCode:providerError.error?.code||response.status,
+    providerMessage:(providerError.error?.message||'').slice(0,500)}));
+   throw new AppError(response.status===429?'ai_provider_busy':'ai_provider_error',503);
+  }
   const result=await response.json() as {candidates?:{content?:{parts?:{text?:string}[]}}[];usageMetadata?:{promptTokenCount?:number;candidatesTokenCount?:number}};
   const answer=result.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim();
   if(!answer)throw new AppError('ai_empty_response',503);
