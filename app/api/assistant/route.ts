@@ -5,7 +5,7 @@ import {dataRequest,insert,list} from '@/lib/supabase/data';
 
 const MONTHLY_LIMIT=4.50;
 const REQUEST_RESERVE=0.01;
-const MODEL='gemini-2.5-flash-lite';
+const MODEL='gemini-3.5-flash-lite';
 const FREE_TIER=true;
 type MessageRow={role:'user'|'assistant';content:string};
 type VenueRow={payload:{name?:string;city?:string;district?:string;category?:string;address?:string;description?:Record<string,string>;price?:number;currency?:string;open?:string;close?:string;phone?:string;website?:string};status:string;is_demo:boolean};
