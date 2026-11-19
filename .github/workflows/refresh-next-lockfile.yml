@@ -1,0 +1,37 @@
+name: Refresh patched Next.js lockfile
+on:
+  push:
+    branches: [fix/next-security-patch]
+permissions:
+  contents: write
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Prepare pnpm
+        run: corepack enable && corepack prepare pnpm@11.25.0 --activate
+      - name: Resolve patched dependency versions
+        run: pnpm install --no-frozen-lockfile
+      - name: Verify production build
+        run: pnpm run build
+      - name: Commit updated lockfile and remove temporary workflow
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          rm .github/workflows/refresh-next-lockfile.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json pnpm-lock.yaml .github/workflows/refresh-next-lockfile.yml
+          if git diff --cached --quiet; then
+            echo "No dependency changes to commit"
+            exit 0
+          fi
+          git commit -m "Update Next.js to patched 16.4.6"
+          git push origin "HEAD:${BRANCH_NAME}"
