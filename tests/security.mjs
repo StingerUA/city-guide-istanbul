@@ -17,7 +17,7 @@ const venue={id:'public-venue',ownerId:uid.partner,name:'Test venue',category:'r
 // Use a real model category to preserve compatibility with the application's catalog.
 const model=await readFile('lib/model.ts','utf8');
 venue.category=model.match(/export const categories\s*=\s*\[\s*['"]([^'"]+)/)?.[1]||'restaurants';
-const tables={cg_users:profiles,cg_meta:[{key:'seed_v1'}],cg_venues:[{id:venue.id,owner_id:uid.partner,status:'published',version:1,payload:venue},{id:'private-venue',owner_id:uid.other,status:'draft',version:1,payload:{...venue,id:'private-venue',ownerId:uid.other,status:'draft'}}],cg_bookings:[{id:bookingId,user_id:uid.other,venue_id:venue.id,status:'confirmed',payload:{id:bookingId,userId:uid.other,venueId:venue.id,status:'confirmed'}}],cg_favorites:[],cg_reviews:[{id:reviewId,user_id:uid.other,venue_id:venue.id,status:'published',version:1,payload:{id:reviewId,userId:uid.other,bookingId,venueId:venue.id,author:'Guest',text:'Test',rating:5}}],cg_feedback:[],cg_uploads:[{id:uploadId,user_id:uid.other,key:'photos/'+uploadId,content_type:'image/png'}]};
+const tables={cg_users:profiles,cg_meta:[{key:'seed_v1'}],cg_venues:[{id:venue.id,owner_id:uid.partner,status:'published',version:1,payload:venue},{id:'private-venue',owner_id:uid.other,status:'draft',version:1,payload:{...venue,id:'private-venue',ownerId:uid.other,status:'draft'}}],cg_bookings:[{id:bookingId,user_id:uid.other,venue_id:venue.id,status:'confirmed',payload:{id:bookingId,userId:uid.other,venueId:venue.id,status:'confirmed'}}],cg_favorites:[],cg_reviews:[{id:reviewId,user_id:uid.other,venue_id:venue.id,status:'published',version:1,payload:{id:reviewId,userId:uid.other,bookingId,venueId:venue.id,author:'Guest',text:'Test',rating:5}}],cg_feedback:[],cg_uploads:[{id:uploadId,user_id:uid.other,key:'photos/'+uploadId,content_type:'image/png'}],cg_ai_conversations:[]};
 let providerCalls=0,revoked=false,failContext=false,denyLogin=false,failUnenroll=false,ip=0;
 const factors={tourist:null,other:null,partner:null,admin:null};
 const account=token=>token.replace(/-weak$/,'');
@@ -76,6 +76,15 @@ try{
  }
  await check('forged identity headers do not authenticate',()=>status('/api/state',undefined,undefined,401,{headers:{'oai-authenticated-user-email':'nncdecdgc@gmail.com','x-user-id':uid.admin}}));
  await check('invalid token fails closed',()=>status('/api/state','invalid',undefined,401));
+ await check('assistant refreshes expired access token from its HTTP-only refresh cookie',async()=>{
+  const r=await request('/api/assistant','expired',{headers:{Cookie:'__Host-cg_access_token=expired; __Host-cg_refresh_token=refresh-fixture'}});
+  assert.equal(r.status,200,await r.clone().text());
+  assert.deepEqual((await r.json()).messages,[]);
+  const cookies=r.headers.getSetCookie().filter(x=>x.startsWith('__Host-cg_'));
+  assert.equal(cookies.length,2);
+  assert.ok(cookies.some(x=>x.startsWith('__Host-cg_access_token=')&&x.includes('Max-Age=3600')));
+  assert.ok(cookies.some(x=>x.startsWith('__Host-cg_refresh_token=')&&x.includes('Max-Age=2592000')));
+ });
  await check('revoked session fails closed',async()=>{revoked=true;await status('/api/state','tourist',undefined,401);revoked=false});
  await check('session verification outage fails closed',async()=>{failContext=true;await status('/api/state','tourist',undefined,401);failContext=false});
  for(const who of ['admin','partner'])await check('MFA off by default for '+who,()=>status('/api/state?surface='+who,who+'-weak',undefined,200));
