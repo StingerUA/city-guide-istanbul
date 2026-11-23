@@ -7,9 +7,9 @@ export {AppError} from './errors';
 export {boundedBody,sameOrigin} from './http-security';
 
 type JsonRow={payload:unknown;version?:number;status?:string;id?:string;user_id?:string;venue_id?:string;created_at?:string;kind?:string};
-export async function actor(){const u=await getSupabaseUser();if(!u)throw new AppError('signin_required',401);return u}
-export async function profile():Promise<Profile>{
- const user=await actor();
+export async function actor(accessToken?:string){const u=await getSupabaseUser(accessToken);if(!u)throw new AppError('signin_required',401);return u}
+export async function profile(accessToken?:string):Promise<Profile>{
+ const user=await actor(accessToken);
  if(user.requiresMfa&&user.aal!=='aal2')throw new AppError('mfa_required',403);
  let rows=await list<{id:string;email:string;role:'partner'|'tourist';payload:Profile}>(
    'cg_users',{id:'eq.'+user.userId});

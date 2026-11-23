@@ -1,5 +1,6 @@
 import {env} from 'cloudflare:workers';
 import {profile,AppError,handleError} from '@/lib/server';
+import {refreshSupabaseSession} from '@/lib/supabase/auth';
 import {jsonBody} from '@/lib/http-security';
 import {dataRequest,insert,list} from '@/lib/supabase/data';
 
@@ -7,6 +8,19 @@ const MONTHLY_LIMIT=4.50;
 const REQUEST_RESERVE=0.01;
 const MODEL='gemini-3.5-flash-lite';
 const FREE_TIER=true;
+
+async function assistantProfile() {
+ let refreshed=await refreshSupabaseSession();
+ try {
+  return await profile(refreshed||undefined);
+ } catch(e) {
+  if(!refreshed&&e instanceof AppError&&e.code==='signin_required') {
+   refreshed=await refreshSupabaseSession(true);
+   if(refreshed)return profile(refreshed);
+  }
+  throw e;
+ }
+}
 type MessageRow={role:'user'|'assistant';content:string};
 type VenueRow={payload:{name?:string;city?:string;district?:string;category?:string;address?:string;description?:Record<string,string>;price?:number;currency?:string;open?:string;close?:string;phone?:string;website?:string};status:string;is_demo:boolean};
 const personality=`You are City Guide, an intelligent urban companion for visitors and residents. Your personality: observant, culturally curious, composed, warm but never clingy, practical, discreet, and intellectually engaging. You are not a generic chatbot or pushy salesperson.
@@ -16,7 +30,7 @@ Current date: ${new Date().toISOString().slice(0,10)}. Current city context: Ist
 
 export async function GET(){
  try{
-  const user=await profile();
+  const user=await assistantProfile();
   const conversations=await list<{id:string}>('cg_ai_conversations',{user_id:'eq.'+user.id,order:'updated_at.desc',limit:'1'},'id');
   if(!conversations.length)return Response.json({messages:[],conversationId:null},{headers:{'Cache-Control':'no-store'}});
   const conversationId=conversations[0].id;
@@ -28,7 +42,7 @@ export async function GET(){
 export async function POST(req:Request){
  let monthKey='',reserved=false,conversationId:string|undefined;
  try{
-  const user=await profile();
+  const user=await assistantProfile();
   const body=await jsonBody(req,12000) as {message?:unknown;conversationId?:unknown;lang?:unknown};
   if(typeof body.message!=='string'||!body.message.trim()||body.message.length>1800)throw new AppError('invalid_input',400);
   const message=body.message.trim();

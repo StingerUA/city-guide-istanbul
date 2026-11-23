@@ -6,6 +6,50 @@ export const AUTH_COOKIE = '__Host-cg_access_token';
 export const REFRESH_COOKIE = '__Host-cg_refresh_token';
 export type SupabaseUser = {userId:string; email:string; displayName:string; fullName:string|null;aal:'aal1'|'aal2';requiresMfa:boolean;factors:{id:string;factor_type:string;status:string}[]};
 
+function accessTokenExpiresSoon(token:string) {
+  try {
+    const encoded=token.split('.')[1];
+    if(!encoded)return true;
+    const base64=encoded.replace(/-/g,'+').replace(/_/g,'/');
+    const padded=base64+'='.repeat((4-base64.length%4)%4);
+    const claims=JSON.parse(atob(padded)) as {exp?:unknown};
+    return typeof claims.exp!=='number'||claims.exp<=Math.floor(Date.now()/1000)+60;
+  } catch { return true; }
+}
+
+/** Refresh the HTTP-only Supabase session from a route handler when its access token is near expiry. */
+export async function refreshSupabaseSession(force=false):Promise<string|null> {
+  const cfg=supabaseConfig();
+  if(!cfg)return null;
+  const jar=await cookies();
+  const access=jar.get(AUTH_COOKIE)?.value;
+  const refresh=jar.get(REFRESH_COOKIE)?.value;
+  if(!refresh||(!force&&access&&!accessTokenExpiresSoon(access)))return null;
+  try {
+    const response=await fetch(cfg.url+'/auth/v1/token?grant_type=refresh_token',{
+      method:'POST',
+      headers:{apikey:cfg.key,'Content-Type':'application/json'},
+      body:JSON.stringify({refresh_token:refresh}),
+      cache:'no-store',
+      signal:AbortSignal.timeout(8000)
+    });
+    if(!response.ok)return null;
+    const token=await response.json() as {
+      access_token?:string;refresh_token?:string;expires_in?:number;
+      user?:{email_confirmed_at?:string|null}
+    };
+    if(!token.user?.email_confirmed_at||!token.access_token||!token.refresh_token)return null;
+    const common={httpOnly:true,secure:true,sameSite:'lax' as const,path:'/'};
+    jar.delete('cg_access_token');
+    jar.delete('cg_refresh_token');
+    jar.set(AUTH_COOKIE,token.access_token,{
+      ...common,maxAge:Math.min(Math.max(token.expires_in||3600,60),3600)
+    });
+    jar.set(REFRESH_COOKIE,token.refresh_token,{...common,maxAge:60*60*24*30});
+    return token.access_token;
+  } catch { return null; }
+}
+
 export function safeReturnPath(value:string|null|undefined) {
   if (!value || value.length>512 || !value.startsWith('/') || value.startsWith('//') || /[\\\x00-\x20\x7f]/.test(value)) return '/tourist';
   try {
@@ -15,10 +59,10 @@ export function safeReturnPath(value:string|null|undefined) {
   } catch { return '/tourist'; }
 }
 
-export async function getSupabaseUser():Promise<SupabaseUser|null> {
+export async function getSupabaseUser(accessToken?:string):Promise<SupabaseUser|null> {
   const cfg = supabaseConfig();
   if (!cfg) return null;
-  const token = (await cookies()).get(AUTH_COOKIE)?.value;
+  const token = accessToken||(await cookies()).get(AUTH_COOKIE)?.value;
   if (!token) return null;
   try {
     // Always ask the trusted Supabase Auth server to validate the access token.
