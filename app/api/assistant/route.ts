@@ -10,12 +10,14 @@ const MODEL='gemini-3.5-flash-lite';
 const FREE_TIER=true;
 
 async function assistantProfile() {
- const refreshed=await refreshSupabaseSession();
+ let refreshed=await refreshSupabaseSession();
  try {
-  return await profile();
+  return await profile(refreshed||undefined);
  } catch(e) {
-  if(!refreshed&&e instanceof AppError&&e.code==='signin_required'&&await refreshSupabaseSession(true))
-   return profile();
+  if(!refreshed&&e instanceof AppError&&e.code==='signin_required') {
+   refreshed=await refreshSupabaseSession(true);
+   if(refreshed)return profile(refreshed);
+  }
   throw e;
  }
 }
