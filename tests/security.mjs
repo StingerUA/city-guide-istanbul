@@ -77,7 +77,7 @@ try{
  await check('forged identity headers do not authenticate',()=>status('/api/state',undefined,undefined,401,{headers:{'oai-authenticated-user-email':'nncdecdgc@gmail.com','x-user-id':uid.admin}}));
  await check('invalid token fails closed',()=>status('/api/state','invalid',undefined,401));
  await check('assistant refreshes expired access token from its HTTP-only refresh cookie',async()=>{
-  const r=await request('/api/assistant','expired',{headers:{Cookie:'__Host-cg_access_token=expired; __Host-cg_refresh_token=refresh-fixture'}});
+  const r=await request('/api/assistant','expired',undefined,{headers:{Cookie:'__Host-cg_access_token=expired; __Host-cg_refresh_token=refresh-fixture'}});
   assert.equal(r.status,200,await r.clone().text());
   assert.deepEqual((await r.json()).messages,[]);
   const cookies=r.headers.getSetCookie().filter(x=>x.startsWith('__Host-cg_'));
