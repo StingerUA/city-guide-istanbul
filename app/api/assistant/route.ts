@@ -40,7 +40,7 @@ export async function GET(){
 export async function POST(req:Request){
  let monthKey='',reserved=false,conversationId:string|undefined;
  try{
-  const user=await profile();
+  const user=await assistantProfile();
   const body=await jsonBody(req,12000) as {message?:unknown;conversationId?:unknown;lang?:unknown};
   if(typeof body.message!=='string'||!body.message.trim()||body.message.length>1800)throw new AppError('invalid_input',400);
   const message=body.message.trim();
