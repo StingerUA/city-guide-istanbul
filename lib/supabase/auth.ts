@@ -18,13 +18,13 @@ function accessTokenExpiresSoon(token:string) {
 }
 
 /** Refresh the HTTP-only Supabase session from a route handler when its access token is near expiry. */
-export async function refreshSupabaseSession(force=false):Promise<boolean> {
+export async function refreshSupabaseSession(force=false):Promise<string|null> {
   const cfg=supabaseConfig();
-  if(!cfg)return false;
+  if(!cfg)return null;
   const jar=await cookies();
   const access=jar.get(AUTH_COOKIE)?.value;
   const refresh=jar.get(REFRESH_COOKIE)?.value;
-  if(!refresh||(!force&&access&&!accessTokenExpiresSoon(access)))return false;
+  if(!refresh||(!force&&access&&!accessTokenExpiresSoon(access)))return null;
   try {
     const response=await fetch(cfg.url+'/auth/v1/token?grant_type=refresh_token',{
       method:'POST',
@@ -33,12 +33,12 @@ export async function refreshSupabaseSession(force=false):Promise<boolean> {
       cache:'no-store',
       signal:AbortSignal.timeout(8000)
     });
-    if(!response.ok)return false;
+    if(!response.ok)return null;
     const token=await response.json() as {
       access_token?:string;refresh_token?:string;expires_in?:number;
       user?:{email_confirmed_at?:string|null}
     };
-    if(!token.user?.email_confirmed_at||!token.access_token||!token.refresh_token)return false;
+    if(!token.user?.email_confirmed_at||!token.access_token||!token.refresh_token)return null;
     const common={httpOnly:true,secure:true,sameSite:'lax' as const,path:'/'};
     jar.delete('cg_access_token');
     jar.delete('cg_refresh_token');
@@ -46,8 +46,8 @@ export async function refreshSupabaseSession(force=false):Promise<boolean> {
       ...common,maxAge:Math.min(Math.max(token.expires_in||3600,60),3600)
     });
     jar.set(REFRESH_COOKIE,token.refresh_token,{...common,maxAge:60*60*24*30});
-    return true;
-  } catch { return false; }
+    return token.access_token;
+  } catch { return null; }
 }
 
 export function safeReturnPath(value:string|null|undefined) {
