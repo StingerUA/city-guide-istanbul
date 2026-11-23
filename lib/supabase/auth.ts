@@ -59,10 +59,10 @@ export function safeReturnPath(value:string|null|undefined) {
   } catch { return '/tourist'; }
 }
 
-export async function getSupabaseUser():Promise<SupabaseUser|null> {
+export async function getSupabaseUser(accessToken?:string):Promise<SupabaseUser|null> {
   const cfg = supabaseConfig();
   if (!cfg) return null;
-  const token = (await cookies()).get(AUTH_COOKIE)?.value;
+  const token = accessToken||(await cookies()).get(AUTH_COOKIE)?.value;
   if (!token) return null;
   try {
     // Always ask the trusted Supabase Auth server to validate the access token.
